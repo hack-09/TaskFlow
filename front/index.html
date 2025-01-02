@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Swap Boxes</title>
+    <style>
+        .box {
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .red {
+            background-color: red;
+        }
+        .blue {
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="box red" id="box1"></div>
+    <div class="box blue" id="box2"></div>
+
+    <script>
+        const box1 = document.getElementById('box1');
+        const box2 = document.getElementById('box2');
+
+        box1.addEventListener('click', swapColors);
+        box2.addEventListener('click', swapColors);
+
+        function swapColors() {
+            box1.classList.toggle('red');
+            box1.classList.toggle('blue');
+            box2.classList.toggle('red');
+            box2.classList.toggle('blue');
+        }
+    </script>
+</body>
+</html>
