@@ -16,7 +16,7 @@ mongoose
 
 const authMiddleware = require("./middleware/authMiddleware");
 app.get("/api/protected", authMiddleware, (req, res) => {
-  res.json({ message: `Welcome, user ID: ${req.user.id}` });
+  res.json({ message: `Welcome, user ID: ${req.user}` });
 });
 
 const authRoute = require("./routes/auth");
