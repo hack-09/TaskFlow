@@ -28,6 +28,11 @@ const taskSchema = new mongoose.Schema(
             required: false,
             default: "General",
         },
+        priority:{
+            type: String,
+            enum: ["Low", "Medium", "High"],
+            default: "Medium",
+        }
     },
     {
         timestamps:true,

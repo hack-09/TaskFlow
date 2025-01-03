@@ -6,13 +6,14 @@ const authMiddleware = require('../middleware/authMiddleware');
 // create or insert the task in the database
 router.post("/",authMiddleware, async (req, res)=>{
     try{    
-        const {title, description, dueDate, status, category} = req.body;
+        const {title, description, dueDate, status, category, priority} = req.body;
         const task = await  Task.create({
             title,
             description,
             dueDate,
             status,
             category,
+            priority,
             userId : req.user,
         });
         res.status(201).json(task);
@@ -26,9 +27,13 @@ router.post("/",authMiddleware, async (req, res)=>{
 router.get("/", authMiddleware, async (req, res)=>{
     try{
         const { category} = req.query;
+        const { priority } = req.query;
         const query = {userId: req.user};
         if(category){
             query.category = category;
+        }
+        if(priority){
+            query.priority = priority;
         }
         const task = await Task.find(query);
         res.status(200).json(task);
@@ -83,6 +88,31 @@ router.put("/:id/category", authMiddleware, async (req, res)=>{
     }catch(err){
         console.error("Error updating task category:", err);
         res.status(500).json({message: "Failed to update task category"});
+    }
+});
+
+router.put("/:id/priority", authMiddleware, async (req, res)=>{
+    const { id } = req.params; // Task ID
+    const { priority } = req.body; // New priority from request body
+
+    if (!["Low", "High", "Medium"].includes(priority)) {
+        return res.status(400).json({ error: "Invalid priority value" });
+    }
+    try{
+        const task = await Task.findOneAndUpdate(
+            {_id: id, userId: req.user},
+            {priority},
+            {new: true},
+        );
+
+        if(!task){
+            return res.status(404).json({message: "Task not found"});
+        }
+
+        res.status(201).json({ message: "Task priority updated successfully"});
+    }catch(err){
+        console.error("Error updating task priority:", err);
+        res.status(500).json({message: "Failed to update task priority"});
     }
 });
 
