@@ -42,7 +42,31 @@ router.get("/", authMiddleware, async (req, res)=>{
     }
 });
 
+router.post("/:id/subtasks", authMiddleware, async (req, res)=>{
+    try{
+        const {id} = req.params;
+        const {title} = req.body;
 
+        if(!title){
+            return res.status(400).json({error: "Subtask title is required"});
+        }
+
+        const task = await Task.findOneAndUpdate(
+            {_id: id, userId: req.user},
+            { $push: {subtasks: {title}}},
+            {new: true},
+        );
+
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        res.status(200).json(task);
+    }catch(error){
+        res.status(500).json({ error: "Failed to add subtask" });
+    }
+});
+
+// update field of task
 router.put("/:id", authMiddleware, async (req, res)=>{
     try{
         const {id} = req.params;
@@ -65,6 +89,7 @@ router.put("/:id", authMiddleware, async (req, res)=>{
     }
 });
 
+// update category of task
 router.put("/:id/category", authMiddleware, async (req, res)=>{
     const { id } = req.params; // Task ID
     const { category } = req.body; // New category from request body
@@ -91,6 +116,7 @@ router.put("/:id/category", authMiddleware, async (req, res)=>{
     }
 });
 
+// update priority of task
 router.put("/:id/priority", authMiddleware, async (req, res)=>{
     const { id } = req.params; // Task ID
     const { priority } = req.body; // New priority from request body
@@ -116,6 +142,38 @@ router.put("/:id/priority", authMiddleware, async (req, res)=>{
     }
 });
 
+router.put("/:id/subtasks/:subtaskId", authMiddleware, async(req, res)=>{
+    try{
+        const {id, subtaskId} = req.params;
+        const { title, status } = req.body;
+
+        const updateFields = {};
+
+        if (title) updateFields["subtasks.$.title"] = title;
+        if(!["Pending", "In-Progres", "Completed"].includes(status)){
+            return res.status(400).json({ error: "Invalid status value"});
+        }else{
+            updateFields["subtasks.$.status"] = status;
+        }
+
+        const task = await Task.findOneAndUpdate(
+            {_id: id, userId: req.user, "subtasks._id": subtaskId},
+            {$set: updateFields},
+            {new: true},
+        );
+
+        if (!task) {
+            return res.status(404).json({ error: "Task or subtask not found" });
+        }
+
+        res.status(200).json({ message: "Subtask updated successfully", task });
+    }catch(error){
+        console.error("Error updating subtask:", error);
+        res.status(500).json({error: "Failed to update subtasks status"});
+    }
+})
+
+// delete task
 router.delete("/:id", authMiddleware, async (req, res)=>{
     try{
         const {id} = req.params;

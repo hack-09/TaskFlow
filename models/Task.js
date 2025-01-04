@@ -32,7 +32,17 @@ const taskSchema = new mongoose.Schema(
             type: String,
             enum: ["Low", "Medium", "High"],
             default: "Medium",
-        }
+        },
+        subtasks:[
+            {
+                title:{type: String, required: true},
+                status: {
+                    type: String,
+                    enum: ["Pending", "In-Progres", "Completed"],
+                    default: "Pending",
+                }
+            }
+        ],
     },
     {
         timestamps:true,
