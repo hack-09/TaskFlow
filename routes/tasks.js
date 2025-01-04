@@ -142,6 +142,7 @@ router.put("/:id/priority", authMiddleware, async (req, res)=>{
     }
 });
 
+// update status of subtask
 router.put("/:id/subtasks/:subtaskId", authMiddleware, async(req, res)=>{
     try{
         const {id, subtaskId} = req.params;
@@ -177,13 +178,33 @@ router.put("/:id/subtasks/:subtaskId", authMiddleware, async(req, res)=>{
 router.delete("/:id", authMiddleware, async (req, res)=>{
     try{
         const {id} = req.params;
-        const task = await Task.findOneAndDelete({ _id: id, userId: req.user});
+        const task = await Task.findOneAndDelete({ _id: id, userId: req.user}, {new: true});
         if(!task){
             return res.status(404).json({error: "Task not found"});
         }
         res.status(200).json({message: "Task deleted successfully"});
     }catch(err){
         res.status(500).json({error: "Failed to delete task"});
+    }
+});
+
+router.delete("/:id/subtasks/:subtaskId", authMiddleware, async (req, res)=>{
+    try{
+        const {id, subtaskId} = req.params;
+
+        const task = await Task.findOneAndUpdate(
+            {_id: id, userId: req.user},
+            {$pull: {subtasks: {_id: subtaskId}}},
+            {new: true},
+        )
+
+        if (!task) {
+            return res.status(404).json({ error: "Task or subtask not found" });
+        }
+
+        res.status(200).json({message: "Subtask deleted successfully", task});
+    }catch(error){
+        res.status(500).json({error: "Failed to delete subtask"});
     }
 });
 
