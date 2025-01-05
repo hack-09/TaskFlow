@@ -1,9 +1,15 @@
+const Notification = require('../models/Notification');
+
 const sendNotification = async (userId, message) => {
-    // Mock sending notification - replace with actual implementation
-    console.log(`Sending notification to user ${userId}: ${message}`);
-    
-    // If you want to use an email or push notification service, integrate it here
-    // Example: Email service like Nodemailer
+    try {
+        const notification = new Notification({
+            userId,
+            message,
+        });
+        await notification.save();
+    } catch (err) {
+        console.error('Failed to send notification:', err.message);
+    }
 };
 
-module.exports = sendNotification;
+module.exports = sendNotification ;

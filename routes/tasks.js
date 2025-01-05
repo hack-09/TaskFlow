@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const authMiddleware = require('../middleware/authMiddleware'); 
+const authMiddleware = require('../middleware/authMiddleware');
+const sendNotification = require('../utils/sendNotification');
 
 // create or insert the task in the database
 router.post("/",authMiddleware, async (req, res)=>{
@@ -16,18 +17,19 @@ router.post("/",authMiddleware, async (req, res)=>{
             priority,
             userId : req.user,
         });
+        await sendNotification(req.user, `Your task ${title} was created successfully.`);
+
         res.status(201).json(task);
     }catch(err){
         console.error(err);
-        res.status(500).json({error: "Task creation failed"});
+        res.status(500).json({error: "Task creation failed", error: err.message});
     }
 });
 
 // fetch all the tasks from the database
 router.get("/", authMiddleware, async (req, res)=>{
     try{
-        const { category} = req.query;
-        const { priority } = req.query;
+        const { category, priority, title, dueDate } = req.query;
         const query = {userId: req.user};
         if(category){
             query.category = category;
@@ -35,6 +37,14 @@ router.get("/", authMiddleware, async (req, res)=>{
         if(priority){
             query.priority = priority;
         }
+        if(title){
+            query.title = { $regex: title, $options: "i" };
+        }
+        if (dueDate) {
+            const dueDateObject = new Date(dueDate); // Assuming dueDate is passed in 'YYYY-MM-DD' format
+            query.dueDate = { $lte: dueDateObject }; // Get tasks that are due on or before the specified date
+        }
+
         const task = await Task.find(query);
         res.status(200).json(task);
     }catch(err){
@@ -81,6 +91,8 @@ router.put("/:id", authMiddleware, async (req, res)=>{
         if(!task){
             return res.status(404).json({message: "Task not found"});
         }
+
+        await sendNotification(task.userId, `Task "${task.title}" was updated.`);
 
         res.status(200).json(task);
     }

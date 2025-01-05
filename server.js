@@ -26,6 +26,9 @@ app.use("/api/auth", authRoute);
 const taskRoutes = require("./routes/tasks");
 app.use("/tasks", taskRoutes);
 
+const notificationRoutes = require("./routes/notifications");
+app.use("/notifications", notificationRoutes);
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
