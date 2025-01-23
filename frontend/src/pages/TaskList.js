@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import AddTaskModal from "./AddTaskModal";
+import Navbar from "./Navbar";
 import axios from "axios";
 import "./TaskList.css";
 
 const TaskList = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [tasks, setTasks] = useState([]);
     const [filteredTasks, setFilteredTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -11,6 +14,10 @@ const TaskList = () => {
         priority: "",
         dueDate: "",
     });
+
+    const handleTaskAdded = (newTask) => {
+        setTasks([...tasks, newTask]);
+    };
 
     // Fetch tasks from the backend
     useEffect(() => {
@@ -21,7 +28,6 @@ const TaskList = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setTasks(res.data);
-                console.log(res.data);
                 setFilteredTasks(res.data); // Initialize with all tasks
             } catch (err) {
                 console.error("Failed to fetch tasks:", err);
@@ -68,54 +74,64 @@ const TaskList = () => {
     }, [tasks, searchTerm, filters]);
 
     return (
-        <div className="task-list">
-            <h1>Your Tasks</h1>
+        <div style={{ display: "flex"}}>
+            <Navbar/>
+            <div className="task-list">
+                <h1>Your Tasks</h1>
 
-            <div className="filters">
-                <input
-                    type="text"
-                    placeholder="Search by title"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="filters">
+                    <input
+                        type="text"
+                        placeholder="Search by title"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
 
-                <select
-                    value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                >
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                    <option value="overdue">Overdue</option>
-                </select>
+                    <select
+                        value={filters.status}
+                        onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
 
-                <select
-                    value={filters.priority}
-                    onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                >
-                    <option value="">All Priorities</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                </select>
+                    <select
+                        value={filters.priority}
+                        onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                    >
+                        <option value="">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
 
-                <input
-                    type="date"
-                    value={filters.dueDate}
-                    onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
-                />
+                    <input
+                        type="date"
+                        value={filters.dueDate}
+                        onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
+                    />
+
+                    <button onClick={() => setIsModalOpen(true)}>Add New Task</button>
+                    <AddTaskModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        onTaskAdded={handleTaskAdded}
+                    />
+                </div>
+
+                <ul className="task-list-items">
+                    {filteredTasks.map((task) => (
+                        <li key={task._id} className={`task ${task.priority}`}>
+                            <h3>{task.title}</h3>
+                            <p>Priority: {task.priority}</p>
+                            <p>Status: {task.completed ? "Completed" : "Pending"}</p>
+                            <p>Due Date: {new Date(task.dueDate).toLocaleDateString()}</p>
+                        </li>
+                    ))}
+                </ul>
             </div>
-
-            <ul className="task-list-items">
-                {filteredTasks.map((task) => (
-                    <li key={task._id} className={`task ${task.priority}`}>
-                        <h3>{task.title}</h3>
-                        <p>Priority: {task.priority}</p>
-                        <p>Status: {task.completed ? "Completed" : "Pending"}</p>
-                        <p>Due Date: {new Date(task.dueDate).toLocaleDateString()}</p>
-                    </li>
-                ))}
-            </ul>
         </div>
     );
 };

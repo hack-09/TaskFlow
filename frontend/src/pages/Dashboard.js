@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Dashboard.css";
+import Navbar from "./Navbar";
 
 const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -40,27 +41,30 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard">
-            <h1>Welcome to Your Dashboard</h1>
-            <div className="task-summary">
-                <h2>Task Summary</h2>
-                <div className="summary-cards">
-                    <div className="card">Total: {summary.total}</div>
-                    <div className="card">Pending: {summary.pending}</div>
-                    <div className="card">Completed: {summary.completed}</div>
-                    <div className="card">Overdue: {summary.overdue}</div>
+            <Navbar />
+            <div>
+                <h1>Welcome to Your Dashboard</h1>
+                <div className="task-summary">
+                    <h2>Task Summary</h2>
+                    <div className="summary-cards">
+                        <div className="card">Total: {summary.total}</div>
+                        <div className="card">Pending: {summary.pending}</div>
+                        <div className="card">Completed: {summary.completed}</div>
+                        <div className="card">Overdue: {summary.overdue}</div>
+                    </div>
                 </div>
+                <div className="task-list-preview">
+                    <h2>Recent Tasks</h2>
+                    <ul>
+                        {tasks.slice(0, 5).map((task) => (
+                            <li key={task._id}>
+                                {task.title} - {task.priority}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <button>Add New Task</button>
             </div>
-            <div className="task-list-preview">
-                <h2>Recent Tasks</h2>
-                <ul>
-                    {tasks.slice(0, 5).map((task) => (
-                        <li key={task._id}>
-                            {task.title} - {task.priority}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <button>Add New Task</button>
         </div>
     );
 };

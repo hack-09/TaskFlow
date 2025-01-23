@@ -1,6 +1,7 @@
 .dashboard {
     padding: 20px;
     font-family: Arial, sans-serif;
+    display: flex;
 }
 
 h1, h2 {
