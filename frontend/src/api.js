@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = axios.create({ baseURL: 'http://localhost:5000' });
+const API = axios.create({ baseURL: `${process.env.ARI_CALL_URL}` });
 
 export const login = (credentials) => API.post('api/auth/login', credentials);
 export const register = (userData) => API.post('api/auth/register', userData);
