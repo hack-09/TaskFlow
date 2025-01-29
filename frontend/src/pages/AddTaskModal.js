@@ -1,99 +1,107 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ArrowLeftCircle } from "lucide-react";
 
-const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        priority: "Medium",
-        dueDate: "",
-    });
+const AddTaskPage = ({ onTaskAdded }) => {
+  const navigate = useNavigate();
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    priority: "Medium",
+    dueDate: "",
+  });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem("token");
-            const res = await axios.post(
-                "http://localhost:5000/tasks",
-                formData,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-            console.log('Task created:', res.data);
-            onTaskAdded(res.data); // Notify parent component
-            onClose(); // Close modal
-        } catch (err) {
-            console.error("Failed to create task:", err);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "http://localhost:5000/tasks",
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-    };
+      );
+      onTaskAdded(res.data);
+      navigate("/tasks");
+    } catch (err) {
+      console.error("Failed to create task:", err);
+    }
+  };
 
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg">
-                <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Task</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        name="title"
-                        placeholder="Task Title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                    <textarea
-                        name="description"
-                        placeholder="Task Description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    ></textarea>
-                    <select
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                    </select>
-                    <input
-                        type="date"
-                        name="dueDate"
-                        value={formData.dueDate}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                    <div className="flex justify-end space-x-4">
-                        <button
-                            type="submit"
-                            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
-                        >
-                            Add Task
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-blue-700">Add New Task</h2>
+          <ArrowLeftCircle
+            className="w-8 h-8 text-blue-700 cursor-pointer hover:text-blue-900"
+            onClick={() => navigate("/tasks")}
+          />
         </div>
-    );
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <input
+            type="text"
+            name="title"
+            placeholder="Task Title"
+            value={formData.title}
+            onChange={handleInputChange}
+            required
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+          <textarea
+            name="description"
+            placeholder="Task Description"
+            value={formData.description}
+            onChange={handleInputChange}
+            required
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+            rows={4}
+          ></textarea>
+          <select
+            name="priority"
+            value={formData.priority}
+            onChange={handleInputChange}
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <input
+            type="date"
+            name="dueDate"
+            value={formData.dueDate}
+            onChange={handleInputChange}
+            required
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate("/tasks")}
+              className="bg-gray-200 text-gray-700 py-3 px-6 rounded-xl hover:bg-gray-300 transition-all duration-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white py-3 px-6 rounded-xl hover:bg-blue-700 transition-all duration-300"
+            >
+              Add Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-export default AddTaskModal;
+export default AddTaskPage;

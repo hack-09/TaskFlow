@@ -6,6 +6,7 @@ import TaskList from './pages/TaskList';
 import RegisterPage from './pages/RegisterPage';
 import Navbar from './pages/Navbar'; // Ensure Navbar is imported
 import './App.css';
+import AddTaskModal from './pages/AddTaskModal';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/tasks" element={<TaskList />} />
+                    <Route path="/addtasks" element={<AddTaskModal />} />
                   </Routes>
                 </div>
               </div>

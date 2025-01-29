@@ -16,7 +16,7 @@ const Dashboard = () => {
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/tasks", {
+        const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTasks(res.data);
