@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { FaTrash, FaEdit } from "react-icons/fa";
 import AddTaskModal from "./AddTaskModal";
-import Navbar from "./Navbar";
 import axios from "axios";
 
 const TaskList = () => {
@@ -12,13 +12,9 @@ const TaskList = () => {
         status: "",
         priority: "",
         dueDate: "",
+        category: "",
     });
 
-    const handleTaskAdded = (newTask) => {
-        setTasks([...tasks, newTask]);
-    };
-
-    // Fetch tasks from the backend
     useEffect(() => {
         const fetchTasks = async () => {
             try {
@@ -27,7 +23,7 @@ const TaskList = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setTasks(res.data);
-                setFilteredTasks(res.data); // Initialize with all tasks
+                setFilteredTasks(res.data);
             } catch (err) {
                 console.error("Failed to fetch tasks:", err);
             }
@@ -35,18 +31,14 @@ const TaskList = () => {
         fetchTasks();
     }, []);
 
-    // Handle search and filter logic
     useEffect(() => {
         let updatedTasks = tasks;
 
-        // Search by title
         if (searchTerm) {
             updatedTasks = updatedTasks.filter((task) =>
                 task.title.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-
-        // Filter by status
         if (filters.status) {
             updatedTasks = updatedTasks.filter((task) =>
                 filters.status === "overdue"
@@ -54,27 +46,40 @@ const TaskList = () => {
                     : task.status === filters.status
             );
         }
-
-        // Filter by priority
         if (filters.priority) {
             updatedTasks = updatedTasks.filter(
                 (task) => task.priority === filters.priority
             );
         }
-
-        // Filter by due date
         if (filters.dueDate) {
             updatedTasks = updatedTasks.filter(
                 (task) => new Date(task.dueDate).toISOString().split("T")[0] === filters.dueDate
+            );
+        }
+        if (filters.category) {
+            updatedTasks = updatedTasks.filter(
+                (task) => task.category === filters.category
             );
         }
 
         setFilteredTasks(updatedTasks);
     }, [tasks, searchTerm, filters]);
 
+    const handleDelete = async (taskId) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://localhost:5000/tasks/${taskId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setTasks(tasks.filter((task) => task._id !== taskId));
+        } catch (err) {
+            console.error("Failed to delete task:", err);
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <div className="w-full p-8">
+            <div className="w-full p-6">
                 <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
 
                 <div className="flex flex-wrap gap-4 mb-6">
@@ -83,13 +88,13 @@ const TaskList = () => {
                         placeholder="Search by title"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
                     />
 
                     <select
                         value={filters.status}
                         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
                     >
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
@@ -100,7 +105,7 @@ const TaskList = () => {
                     <select
                         value={filters.priority}
                         onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
                     >
                         <option value="">All Priorities</option>
                         <option value="High">High</option>
@@ -108,31 +113,42 @@ const TaskList = () => {
                         <option value="Low">Low</option>
                     </select>
 
+                    <select
+                        value={filters.category}
+                        onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                    >
+                        <option value="">All Categories</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Health">Health</option>
+                    </select>
+
                     <input
                         type="date"
                         value={filters.dueDate}
                         onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
                     />
 
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 w-full md:w-auto"
+                        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
                     >
                         Add New Task
                     </button>
                     <AddTaskModal
                         isOpen={isModalOpen}
                         onClose={() => setIsModalOpen(false)}
-                        onTaskAdded={handleTaskAdded}
                     />
                 </div>
 
-                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTasks.map((task) => (
-                        <li
+                        <div
                             key={task._id}
-                            className={`bg-white p-4 rounded-lg shadow-md border-l-4 ${
+                            className={`relative bg-white p-6 rounded-xl shadow-md border-l-4 
+                            ${
                                 task.priority === "High"
                                     ? "border-red-500"
                                     : task.priority === "Medium"
@@ -140,19 +156,44 @@ const TaskList = () => {
                                     : "border-green-500"
                             }`}
                         >
-                            <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                                {task.title}
-                            </h3>
-                            <p className="text-sm text-gray-600">Priority: {task.priority}</p>
-                            <p className="text-sm text-gray-600">
-                                Status: {task.completed ? "Completed" : "Pending"}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Due Date: {new Date(task.dueDate).toLocaleDateString()}
-                            </p>
-                        </li>
+                            <h3 className="text-xl font-semibold text-gray-800">{task.title}</h3>
+                            
+                            <div className="flex justify-between mt-2">
+                                <span
+                                    className={`px-2 py-1 text-sm font-semibold rounded-md
+                                    ${
+                                        task.completed
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700"
+                                    }`}
+                                >
+                                    {task.completed ? "Completed" : "Pending"}
+                                </span>
+
+                                <span className="text-sm text-gray-500">
+                                    {new Date(task.dueDate).toLocaleDateString()}
+                                </span>
+                            </div>
+
+                            <p className="text-gray-600 text-sm mt-2">Priority: {task.priority}</p>
+                            <p className="text-gray-600 text-sm">Category: {task.category}</p>
+
+                            <div className="absolute top-2 right-2 flex space-x-3">
+                                <button
+                                    onClick={() => handleDelete(task._id)}
+                                    className="text-red-500 hover:text-red-700 transition"
+                                >
+                                    <FaTrash size={16} />
+                                </button>
+                                <button
+                                    className="text-blue-500 hover:text-blue-700 transition"
+                                >
+                                    <FaEdit size={16} />
+                                </button>
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             </div>
         </div>
     );
