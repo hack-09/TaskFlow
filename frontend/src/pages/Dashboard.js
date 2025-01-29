@@ -40,7 +40,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <div className="max-w-7xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Welcome to Your Dashboard</h1>
         
@@ -83,9 +82,9 @@ const Dashboard = () => {
           </ul>
         </div>
 
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+        {/* <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
           Add New Task
-        </button>
+        </button> */}
       </div>
     </div>
   );
