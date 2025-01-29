@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash, FaEdit } from "react-icons/fa";
-import AddTaskModal from "./AddTaskModal";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const TaskList = () => {
+    const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tasks, setTasks] = useState([]);
     const [filteredTasks, setFilteredTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedTask, setSelectedTask] = useState(null);
     const [filters, setFilters] = useState({
         status: "",
         priority: "",
@@ -19,7 +21,7 @@ const TaskList = () => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("http://localhost:5000/tasks", {
+                const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setTasks(res.data);
@@ -77,11 +79,30 @@ const TaskList = () => {
         }
     };
 
+    const handleEditClick = (task) => {
+        setSelectedTask(task);
+        setIsModalOpen(true);
+    };
+
+    const handleUpdateTask = async (updatedTask) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.put(`http://localhost:5000/tasks/${updatedTask._id}`, updatedTask, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setTasks(tasks.map(task => task._id === updatedTask._id ? updatedTask : task));
+            setIsModalOpen(false);
+        } catch (err) {
+            console.error("Failed to update task:", err);
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <div className="w-full p-6">
                 <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
 
+                {/* Filter Section */}
                 <div className="flex flex-wrap gap-4 mb-6">
                     <input
                         type="text"
@@ -132,17 +153,14 @@ const TaskList = () => {
                     />
 
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => navigate('/addtasks')}
                         className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
                     >
                         Add New Task
                     </button>
-                    <AddTaskModal
-                        isOpen={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                    />
                 </div>
 
+                {/* Task Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTasks.map((task) => (
                         <div
@@ -186,7 +204,7 @@ const TaskList = () => {
                                     <FaTrash size={16} />
                                 </button>
                                 <button
-                                    className="text-blue-500 hover:text-blue-700 transition"
+                                    onClick={() => handleEditClick(task)} className="text-blue-500 hover:text-blue-700 transition"
                                 >
                                     <FaEdit size={16} />
                                 </button>
