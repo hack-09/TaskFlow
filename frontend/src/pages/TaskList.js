@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import AddTaskModal from "./AddTaskModal";
 import Navbar from "./Navbar";
 import axios from "axios";
-import "./css/TaskList.css";
 
 const TaskList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
