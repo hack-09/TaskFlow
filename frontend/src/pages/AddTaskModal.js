@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "./AddTaskModal.css";
+import "./css/AddTaskModal.css";
 
 const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     const [formData, setFormData] = useState({
