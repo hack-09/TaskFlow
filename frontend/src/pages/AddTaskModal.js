@@ -36,10 +36,10 @@ const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay" style={{padding: "400px"}}>
-            <div className="modal-content">
-                <h2>Add New Task</h2>
-                <form onSubmit={handleSubmit}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg">
+                <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Task</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         type="text"
                         name="title"
@@ -47,6 +47,7 @@ const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                         value={formData.title}
                         onChange={handleInputChange}
                         required
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                     <textarea
                         name="description"
@@ -54,11 +55,13 @@ const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                         value={formData.description}
                         onChange={handleInputChange}
                         required
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     ></textarea>
                     <select
                         name="priority"
                         value={formData.priority}
                         onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value="High">High</option>
                         <option value="Medium">Medium</option>
@@ -70,11 +73,23 @@ const AddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                         value={formData.dueDate}
                         onChange={handleInputChange}
                         required
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
-                    <button type="submit">Add Task</button>
-                    <button type="button" onClick={onClose}>
-                        Cancel
-                    </button>
+                    <div className="flex justify-end space-x-4">
+                        <button
+                            type="submit"
+                            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
+                        >
+                            Add Task
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

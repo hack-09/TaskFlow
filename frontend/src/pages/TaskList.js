@@ -74,7 +74,6 @@ const TaskList = () => {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <Navbar />
             <div className="w-full p-8">
                 <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
 
