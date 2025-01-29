@@ -24,9 +24,7 @@ const TaskList = () => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("http://localhost:5000/tasks", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const res = await axios.get()
                 setTasks(res.data);
                 setFilteredTasks(res.data); // Initialize with all tasks
             } catch (err) {
