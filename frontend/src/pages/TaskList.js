@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import EditTaskModal from './EditTaskModal'
+import EditTaskModal from '../components/EditTaskModal'
 import axios from "axios";
 
 const TaskList = () => {
