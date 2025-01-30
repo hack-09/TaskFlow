@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { login } from "../service/authapi"; // Ensure the path to authapi.js is correct
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react"; // Import icons from lucide-react
@@ -9,6 +9,13 @@ const LoginPage = () => {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          navigate("/dashboard"); // Redirect to dashboard if authenticated
+        }
+      }, [navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

@@ -4,7 +4,7 @@ import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import TaskList from './pages/TaskList';
 import RegisterPage from './pages/RegisterPage';
-import Navbar from './pages/Navbar'; // Ensure Navbar is imported
+import Navbar from './components/Navbar'; // Ensure Navbar is imported
 import './App.css';
 import AddTaskModal from './pages/AddTaskModal';
 

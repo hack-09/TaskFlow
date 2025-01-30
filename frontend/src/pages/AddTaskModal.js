@@ -15,7 +15,7 @@ const AddTaskPage = ({ onTaskAdded }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -37,16 +37,16 @@ const AddTaskPage = ({ onTaskAdded }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-blue-700">Add New Task</h2>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+      <div className="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-blue-700">Add New Task</h2>
           <ArrowLeftCircle
             className="w-8 h-8 text-blue-700 cursor-pointer hover:text-blue-900"
             onClick={() => navigate("/tasks")}
           />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             name="title"
@@ -54,7 +54,7 @@ const AddTaskPage = ({ onTaskAdded }) => {
             value={formData.title}
             onChange={handleInputChange}
             required
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <textarea
             name="description"
@@ -62,14 +62,14 @@ const AddTaskPage = ({ onTaskAdded }) => {
             value={formData.description}
             onChange={handleInputChange}
             required
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
             rows={4}
           ></textarea>
           <select
             name="priority"
             value={formData.priority}
             onChange={handleInputChange}
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="High">High</option>
             <option value="Medium">Medium</option>
@@ -81,19 +81,19 @@ const AddTaskPage = ({ onTaskAdded }) => {
             value={formData.dueDate}
             onChange={handleInputChange}
             required
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={() => navigate("/tasks")}
-              className="bg-gray-200 text-gray-700 py-3 px-6 rounded-xl hover:bg-gray-300 transition-all duration-300"
+              className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all duration-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white py-3 px-6 rounded-xl hover:bg-blue-700 transition-all duration-300"
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300"
             >
               Add Task
             </button>

@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash, FaEdit } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import EditTaskModal from '../components/EditTaskModal'
+import AddTaskModal from "./AddTaskModal";
+import EditTaskModal from "./EditTaskModal";
 import axios from "axios";
 
 const TaskList = () => {
-    const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editTask, setEditTask] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [filteredTasks, setFilteredTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedTask, setSelectedTask] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [filters, setFilters] = useState({
         status: "",
@@ -23,7 +22,7 @@ const TaskList = () => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
+                const res = await axios.get("http://localhost:5000/tasks", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setTasks(res.data);
@@ -72,7 +71,7 @@ const TaskList = () => {
     const handleDelete = async (taskId) => {
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`${process.env.REACT_APP_ARI_CALL_URL}/tasks/${taskId}`, {
+            await axios.delete(`http://localhost:5000/tasks/${taskId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setTasks(tasks.filter((task) => task._id !== taskId));
@@ -82,35 +81,11 @@ const TaskList = () => {
         }
     };
 
-    const handleEditClick = (task) => {
-        setSelectedTask(task);
-        setIsModalOpen(true);
-    };
-
-    const handleUpdateTask = async (updatedTask) => {
-        console.log(updatedTask);
-        try {
-            setTasks((prevTasks) => {
-                const taskIndex = prevTasks.findIndex((task) => task._id === updatedTask._id);
-                if (taskIndex === -1) return prevTasks;
-              
-                const updatedTasks = [...prevTasks];
-                updatedTasks[taskIndex] = { ...prevTasks[taskIndex], ...updatedTask };
-                return updatedTasks;
-              });
-              
-            setIsModalOpen(false);
-        } catch (err) {
-            console.error("Failed to update task:", err);
-        }
-    };
-
     return (
         <div className="flex min-h-screen bg-gray-100">
             <div className="w-full p-6">
                 <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
 
-                {/* Filter Section */}
                 <div className="flex flex-wrap gap-4 mb-6">
                     <input
                         type="text"
@@ -131,82 +106,35 @@ const TaskList = () => {
                         <option value="overdue">Overdue</option>
                     </select>
 
-                    <select
-                        value={filters.priority}
-                        onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
-                    >
-                        <option value="">All Priorities</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                    </select>
-
-                    <select
-                        value={filters.category}
-                        onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
-                    >
-                        <option value="">All Categories</option>
-                        <option value="Work">Work</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Health">Health</option>
-                    </select>
-
-                    <input
-                        type="date"
-                        value={filters.dueDate}
-                        onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
-                    />
-
                     <button
-                        onClick={() => navigate('/addtasks')}
+                        onClick={() => setIsModalOpen(true)}
                         className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
                     >
                         Add New Task
                     </button>
+                    <AddTaskModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                    />
                 </div>
 
-                {/* Task Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTasks.map((task) => (
                         <div
                             key={task._id}
-                            className={`relative p-6 rounded-xl shadow-md border-l-4 
+                            className={`relative bg-white p-6 rounded-xl shadow-md border-l-4 
                             ${
                                 task.priority === "High"
                                     ? "border-red-500"
                                     : task.priority === "Medium"
                                     ? "border-yellow-500"
                                     : "border-green-500"
-                            }
-                            ${
-                                task.status === "completed"
-                                ? "bg-lime-50":"bg-white"
                             }`}
                         >
                             <h3 className="text-xl font-semibold text-gray-800">{task.title}</h3>
-                            
-                            <div className="flex justify-between mt-2">
-                                <span
-                                    className={`px-2 py-1 text-sm font-semibold rounded-md
-                                    ${
-                                        task.status === 'completed'
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                    }`}
-                                >
-                                    {task.status === 'completed' ? "Completed" : "Pending"}
-                                </span>
-
-                                <span className="text-sm text-gray-500">
-                                    {new Date(task.dueDate).toLocaleDateString()}
-                                </span>
-                            </div>
-
                             <p className="text-gray-600 text-sm mt-2">Priority: {task.priority}</p>
                             <p className="text-gray-600 text-sm">Category: {task.category}</p>
+                            <p className="text-gray-600 text-sm">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
 
                             <div className="absolute top-2 right-2 flex space-x-3">
                                 <button
@@ -216,7 +144,8 @@ const TaskList = () => {
                                     <FaTrash size={16} />
                                 </button>
                                 <button
-                                    onClick={() => handleEditClick(task)} className="text-blue-500 hover:text-blue-700 transition"
+                                    onClick={() => setEditTask(task)}
+                                    className="text-blue-500 hover:text-blue-700 transition"
                                 >
                                     <FaEdit size={16} />
                                 </button>
@@ -224,12 +153,17 @@ const TaskList = () => {
                         </div>
                     ))}
                 </div>
-                {isModalOpen && selectedTask && (
+
+                {editTask && (
                     <EditTaskModal
-                        isOpen={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                        task={selectedTask}
-                        onUpdate={handleUpdateTask}
+                        task={editTask}
+                        onClose={() => setEditTask(null)}
+                        onUpdate={(updatedTask) => {
+                            setTasks((prevTasks) =>
+                                prevTasks.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+                            );
+                            setEditTask(null);
+                        }}
                     />
                 )}
 
