@@ -19,10 +19,10 @@
 📅 Drag-and-drop deadline scheduling  
 
 ✅ **Cross-Platform Design**  
-📱 Responsive UI optimized for desktop, tablet & mobile  
+📱 Responsive UI optimized for desktop & tablet   
 
 ✅ **Robust Backend**  
-🛡️ Express.js API with MongoDB & Mongoose ORM  
+🛡️ Express.js API with MongoDB & Mongoose  
 
 ---
 
@@ -32,7 +32,7 @@
 |--------------|-------------|--------------|  
 | ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black) | ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white) | ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white) |  
 | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white) | ![Express.js](https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white) | ![Mongoose](https://img.shields.io/badge/Mongoose-880000?logo=mongoose&logoColor=white) |  
-| ![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white) | ![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white) |  |  
+|   | ![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white) |  |  
 
 ---
 
@@ -51,7 +51,7 @@
 git clone https://github.com/hack-09/TaskManagement.git
 cd TaskManagement
 cd backend && npm install
-cd ../frontend && npm install
+cd frontend && npm install
 ```
 
 ### 2. Configure Environment  
