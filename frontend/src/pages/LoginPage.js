@@ -19,7 +19,6 @@ const LoginPage = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        console.log("Base URL:", process.env.REACT_APP_ARI_CALL_URL);
 
         try {
             const response = await login({ email, password });

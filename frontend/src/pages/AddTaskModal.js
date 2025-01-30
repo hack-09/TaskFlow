@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { createTask } from "../service/api";
 import { ArrowLeftCircle } from "lucide-react";
 
-const AddTaskPage = ({ onTaskAdded }) => {
+const AddTaskPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -21,15 +21,8 @@ const AddTaskPage = ({ onTaskAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:5000/tasks",
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      onTaskAdded(res.data);
+      // eslint-disable-next-line
+      const res = await createTask(formData);
       navigate("/tasks");
     } catch (err) {
       console.error("Failed to create task:", err);
@@ -37,8 +30,8 @@ const AddTaskPage = ({ onTaskAdded }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <div className="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-800 p-4 dark:from-gray-900 dark:to-black-800">
+      <div className="bg-white dark:bg-gray-400 shadow-xl rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-blue-700">Add New Task</h2>
           <ArrowLeftCircle
