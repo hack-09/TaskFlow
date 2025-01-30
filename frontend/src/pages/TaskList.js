@@ -19,6 +19,8 @@ const TaskList = () => {
         category: "",
     });
 
+    const filterStyle = "border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 dark:bg-gray-200";
+
     useEffect(() => {
         const fetchTasks = async () => {
             try {
@@ -106,7 +108,7 @@ const TaskList = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-gray-100 dark:bg-gray-800">
             <div className="w-full p-6">
                 <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
 
@@ -117,13 +119,13 @@ const TaskList = () => {
                         placeholder="Search by title"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                        className= {filterStyle}
                     />
 
                     <select
                         value={filters.status}
                         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                        className={filterStyle}
                     >
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
@@ -134,7 +136,7 @@ const TaskList = () => {
                     <select
                         value={filters.priority}
                         onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                        className={filterStyle}
                     >
                         <option value="">All Priorities</option>
                         <option value="High">High</option>
@@ -145,7 +147,7 @@ const TaskList = () => {
                     <select
                         value={filters.category}
                         onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                        className={filterStyle}
                     >
                         <option value="">All Categories</option>
                         <option value="Work">Work</option>
@@ -157,7 +159,7 @@ const TaskList = () => {
                         type="date"
                         value={filters.dueDate}
                         onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
-                        className="border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600"
+                        className={filterStyle}
                     />
 
                     <button

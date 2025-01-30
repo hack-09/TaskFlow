@@ -21,7 +21,7 @@ function App() {
             element={
               <div className="flex w-full">
                 <Navbar />
-                <div className="flex-1 p-8 bg-gray-100">
+                <div className="flex-1 bg-gray-800">
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/tasks" element={<TaskList />} />

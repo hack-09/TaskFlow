@@ -23,7 +23,7 @@ const AddTaskPage = ({ onTaskAdded }) => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/tasks",
+        `${process.env.REACT_APP_ARI_CALL_URL}/tasks`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -37,8 +37,8 @@ const AddTaskPage = ({ onTaskAdded }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <div className="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-800 p-4 dark:from-gray-900 dark:to-black-800">
+      <div className="bg-white dark:bg-gray-400 shadow-xl rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-blue-700">Add New Task</h2>
           <ArrowLeftCircle
