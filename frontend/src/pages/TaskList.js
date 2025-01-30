@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import EditTaskModal from '../components/EditTaskModal'
+import EditTaskModal from '../components/EditTaskModal';
+import { deleteTask } from "../service/api";
 import axios from "axios";
 
 const TaskList = () => {
@@ -74,9 +75,7 @@ const TaskList = () => {
     const handleDelete = async (taskId) => {
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`${process.env.REACT_APP_ARI_CALL_URL}/tasks/${taskId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await deleteTask(taskId);
             setTasks(tasks.filter((task) => task._id !== taskId));
             setConfirmDelete(null);
         } catch (err) {

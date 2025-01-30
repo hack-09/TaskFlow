@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { createTask } from "../service/api";
 import { ArrowLeftCircle } from "lucide-react";
 
-const AddTaskPage = ({ onTaskAdded }) => {
+const AddTaskPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -21,15 +21,8 @@ const AddTaskPage = ({ onTaskAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        `${process.env.REACT_APP_ARI_CALL_URL}/tasks`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      onTaskAdded(res.data);
+      // eslint-disable-next-line
+      const res = await createTask(formData);
       navigate("/tasks");
     } catch (err) {
       console.error("Failed to create task:", err);
