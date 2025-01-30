@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, ListCheck, LogIn } from "lucide-react";
+import { Home, ListCheck, LogIn, PlusCircle } from "lucide-react";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -22,9 +22,15 @@ function Navbar() {
       </button>
       <button
         onClick={() => navigate("/tasks")}
-        className="flex py-2 px-4 bg-blue-500 hover:bg-blue-700 rounded text-white text-left"
+        className="flex py-2 px-4 mb-4 bg-blue-500 hover:bg-blue-700 rounded text-white text-left"
       >
         <ListCheck className="w-5 h-5 mr-2" />My Tasks
+      </button>
+      <button
+        onClick={() => navigate("/addtasks")}
+        className="flex py-2 px-4 bg-blue-500 hover:bg-blue-700 rounded text-white text-left"
+      >
+        <PlusCircle className="w-5 h-5 mr-2" />Add Tasks
       </button>
     </div>
     </nav>
