@@ -121,8 +121,9 @@ MIT Licensed - See [LICENSE](LICENSE) for details
 ---
 
 🔗 **Live Demo**: [taskflow-pro.demo.app](https://task-management-93mjr7k98-hack-09s-projects.vercel.app/)
+
 **Test Credentials** (*Note - Only for demo)
-Enail -> test@example.com
-Password -> test@456
+- Email -> test@example.com
+- Password -> test@456
 
 ⭐ **Star This Repo** to Support Development!  
