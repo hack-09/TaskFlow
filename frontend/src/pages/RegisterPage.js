@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { register } from "../service/authapi";
 import { useNavigate, Link } from "react-router-dom";
 import { 
@@ -158,6 +158,7 @@ const RegisterPage = () => {
                 password: formData.password // Password hashing should be done server-side
             };
 
+            // eslint-disable-next-line
             const response = await register(sanitizedData);
             
             // Success animation and redirect

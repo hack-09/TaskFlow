@@ -74,6 +74,7 @@ const TaskList = () => {
 
     const handleDelete = async (taskId) => {
         try {
+            // eslint-disable-next-line
             const token = localStorage.getItem("token");
             await deleteTask(taskId);
             setTasks(tasks.filter((task) => task._id !== taskId));

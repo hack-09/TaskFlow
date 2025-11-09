@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { login } from "../service/authapi";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, LogIn, Mail, Lock, AlertCircle, Loader2, Github, Twitter } from "lucide-react";
+import { Eye, EyeOff, LogIn, Mail, Lock, AlertCircle, Loader2, Github } from "lucide-react";
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
