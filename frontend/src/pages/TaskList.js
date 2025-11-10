@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import EditTaskModal from '../components/EditTaskModal';
@@ -6,7 +7,9 @@ import { deleteTask } from "../service/api";
 import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
-const TaskList = ({workspaceId}) => {
+const TaskList = () => {
+    const { id } = useParams();
+    const workspaceId = id || null;
     const { socket, isConnected } = useSocket();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,7 +57,7 @@ const TaskList = ({workspaceId}) => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const endpoint = workspaceId ? `/workspaces/${workspaceId}/tasks` : '/tasks';
+                const endpoint = workspaceId ? `/tasks?workspaceId=${workspaceId}` : '/tasks';
                 const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });

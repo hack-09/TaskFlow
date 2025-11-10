@@ -14,6 +14,7 @@ import TermsOfService from "./pages/legal/TermsOfService";
 
 import AddTaskModal from "./pages/AddTaskModal";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ActivityLog from "./components/ActivityLog";
 import { SocketProvider } from "./context/SocketContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import CreateWorkspace from "./pages/Workspaces/CreateWorkspace";
@@ -58,6 +59,7 @@ function App() {
                             <Route path="/workspace/:id" element={<WorkspaceDashboard  />} />
                             <Route path="/create-workspace" element={<CreateWorkspace />} />
                             <Route path="/workspace/:id/tasks" element={<TaskList />} />
+                            <Route path="/workspace/:id/activity" element={<ActivityLog />} />
                             <Route path="/workspace/join" element={<JoinWorkspace />} />
                             <Route path="/workspace/:id/members" element={<WorkspaceMembers />} />
 
