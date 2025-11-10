@@ -1,15 +1,17 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "./pages/Authentication/LoginPage";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import TaskList from "./pages/TaskList";
-import RegisterPage from "./pages/RegisterPage";
+import RegisterPage from "./pages/Authentication/RegisterPage";
+
 import LandingPage from "./pages/LandingPage";
-import Documentation from "./pages/Documentation";
-import Contact from "./pages/Contact";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
+import Documentation from "./pages/legal/Documentation";
+import Contact from "./pages/legal/Contact";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+
 import AddTaskModal from "./pages/AddTaskModal";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SocketProvider } from "./context/SocketContext";
@@ -53,17 +55,11 @@ function App() {
                             <Route path="/workspaces" element={<WorkspaceList />} />
 
                             {/* Collaboration workspace routes */}
-                            <Route
-                              path="/workspace/:id"
-                              element={<WorkspaceDashboard  />}
-                            />
-                            <Route
-                              path="/workspace/:id/tasks"
-                              element={<TaskList />}
-                            />
+                            <Route path="/workspace/:id" element={<WorkspaceDashboard  />} />
+                            <Route path="/workspace/:id/tasks" element={<TaskList />} />
                             <Route path="/create-workspace" element={<CreateWorkspace />} />
-                            <Route path="/workspaces/join" element={<JoinWorkspace />} />
-                            <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
+                            <Route path="/workspace/join" element={<JoinWorkspace />} />
+                            <Route path="/workspace/:id/members" element={<WorkspaceMembers />} />
 
                           </Routes>
                         </div>

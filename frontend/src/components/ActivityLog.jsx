@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 const ActivityLog = ({ workspaceId }) => {
   const [logs, setLogs] = useState([]);
 
@@ -21,3 +24,5 @@ const ActivityLog = ({ workspaceId }) => {
     </div>
   );
 };
+
+export default ActivityLog;

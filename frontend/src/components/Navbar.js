@@ -23,7 +23,7 @@ function Navbar() {
     const fetchWorkspaces = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/workspaces", {
+        const res = await axios.get("http://localhost:5000/workspaces", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setWorkspaces(res.data);
@@ -89,21 +89,31 @@ function Navbar() {
         {/* Collaborative Workspaces */}
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Collaborations</h3>
+
           {loading ? (
             <p className="text-sm">Loading...</p>
           ) : workspaces.length > 0 ? (
-            workspaces.map((ws) => (
-              <button
-                key={ws._id}
-                onClick={() => navigate(`/workspace/${ws._id}`)}
-                className="flex py-2 px-4 mb-2 bg-blue-500 hover:bg-blue-700 rounded text-white text-left w-full"
-              >
-                <Users className="w-5 h-5 mr-2" /> {ws.name}
-              </button>
-            ))
+            <>
+              {workspaces.slice(0, 3).map((ws) => (
+                <button
+                  key={ws._id}
+                  onClick={() => navigate(`/workspace/${ws._id}`)}
+                  className="flex py-2 px-4 mb-2 bg-blue-500 hover:bg-blue-700 rounded text-white text-left w-full"
+                >
+                  <Users className="w-5 h-5 mr-2" /> {ws.name}
+                </button>
+              ))}
+            </>
           ) : (
             <p className="text-sm italic">No collaborations yet</p>
           )}
+          
+          <button
+            onClick={() => navigate("/workspaces")}
+            className="flex py-2 px-4 mb-2 bg-gray-500 hover:bg-gray-700 rounded text-white text-left w-full"
+          >
+            View All Workspaces →
+          </button>
 
           <button
             onClick={() => navigate("/create-workspace")}

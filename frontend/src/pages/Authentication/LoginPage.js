@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { login } from "../service/authapi";
+import { login } from "../../service/authapi";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn, Mail, Lock, AlertCircle, Loader2, Github } from "lucide-react";
 

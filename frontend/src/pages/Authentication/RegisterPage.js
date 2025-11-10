@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { register } from "../service/authapi";
+import { register } from "../../service/authapi";
 import { useNavigate, Link } from "react-router-dom";
 import { 
     Eye, 

@@ -4,9 +4,7 @@ import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
 const Dashboard = () => {
-  const { workspaceId } = useWorkspace();
-  const { socket } = useSocket();
-
+  const { socket } = useSocket(); // keep socket for real-time personal tasks
   const [tasks, setTasks] = useState([]);
   const [summary, setSummary] = useState({
     total: 0,
@@ -19,18 +17,14 @@ const Dashboard = () => {
   const fetchTasks = async () => {
     try {
       const token = localStorage.getItem("token");
-      const endpoint = workspaceId
-        ? `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}/tasks`
-        : `${process.env.REACT_APP_ARI_CALL_URL}/tasks`;
-
-      const res = await axios.get(endpoint, {
+      if (!token) return console.warn("No auth token found.");
+      const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setTasks(res.data);
       calculateSummary(res.data);
     } catch (err) {
-      console.error("Failed to fetch tasks:", err);
+      console.error("Failed to fetch personal tasks:", err);
     }
   };
 
@@ -50,72 +44,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [workspaceId]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    if (workspaceId) socket.emit("joinWorkspace", workspaceId);
-    else socket.emit("leaveAllWorkspaces");
-
-    return () => {
-      if (workspaceId) socket.emit("leaveWorkspace", workspaceId);
-    };
-  }, [socket, workspaceId]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const updateEvent = workspaceId ? "workspaceTaskUpdated" : "taskUpdated";
-    const createEvent = workspaceId ? "workspaceTaskCreated" : "taskCreated";
-    const deleteEvent = workspaceId ? "workspaceTaskDeleted" : "taskDeleted";
-
-    const handleUpdate = (updatedTask) => {
-      setTasks((prev) => {
-        const exists = prev.some((t) => t._id === updatedTask._id);
-        const newTasks = exists
-          ? prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
-          : [updatedTask, ...prev];
-        calculateSummary(newTasks);
-        return newTasks;
-      });
-    };
-
-    const handleDelete = (deletedTaskId) => {
-      setTasks((prev) => {
-        const newTasks = prev.filter((t) => t._id !== deletedTaskId);
-        calculateSummary(newTasks);
-        return newTasks;
-      });
-    };
-
-    const handleCreate = (newTask) => {
-      setTasks((prev) => {
-        const newTasks = [newTask, ...prev];
-        calculateSummary(newTasks);
-        return newTasks;
-      });
-    };
-
-    socket.on(updateEvent, handleUpdate);
-    socket.on(createEvent, handleCreate);
-    socket.on(deleteEvent, handleDelete);
-
-    return () => {
-      socket.off(updateEvent);
-      socket.off(createEvent);
-      socket.off(deleteEvent);
-    };
-  }, [socket, workspaceId]);
+  }, []);
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-800">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-blue-600">
-          {workspaceId ? "Workspace Dashboard" : "Personal Dashboard"}
+          {"Personal Dashboard"}
         </h1>
         <span className="text-gray-500 text-sm">
-          {tasks.length} {workspaceId ? "Workspace" : "Personal"} Tasks
+          {tasks.length} {"Personal"} Tasks
         </span>
       </div>
 
@@ -129,7 +67,7 @@ const Dashboard = () => {
 
       {tasks.length === 0 ? (
         <p className="text-gray-400 text-center mt-10">
-          No tasks found for this {workspaceId ? "workspace" : "account"}.
+          No tasks found for this {"account"}.
         </p>
       ) : (
         <div className="space-y-4">
