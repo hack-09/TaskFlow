@@ -1,3 +1,6 @@
+import React, { useState } from "react";
+import axios from "axios";
+
 const InviteMembersModal = ({ workspaceId, onClose }) => {
   const [email, setEmail] = useState("");
 
@@ -21,3 +24,4 @@ const InviteMembersModal = ({ workspaceId, onClose }) => {
     </div>
   );
 };
+export default InviteMembersModal;

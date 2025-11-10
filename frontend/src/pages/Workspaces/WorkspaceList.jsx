@@ -15,7 +15,7 @@ const WorkspaceList = () => {
         const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/workspaces/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Fetched workspaces:", res.data);
+        // console.log("Fetched workspaces:", res.data);
         setWorkspaces(res.data);
       } catch (err) {
         console.error("Failed to fetch workspaces:", err);
@@ -23,22 +23,6 @@ const WorkspaceList = () => {
     };
     fetchWorkspaces();
   }, []);
-
-  const handleCreate = async () => {
-    if (!newWorkspace.trim()) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        `${process.env.REACT_APP_ARI_CALL_URL}/workspaces`,
-        { name: newWorkspace },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setWorkspaces([res.data, ...workspaces]);
-      setNewWorkspace("");
-    } catch (err) {
-      console.error("Failed to create workspace:", err);
-    }
-  };
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-800">
@@ -48,7 +32,7 @@ const WorkspaceList = () => {
           <div
             key={w._id}
             className="p-4 bg-white rounded shadow cursor-pointer hover:bg-gray-100"
-            onClick={() => navigate(`/workspaces/${w._id}`)}
+            onClick={() => navigate(`/workspace/${w._id}`)}
           >
             <h2 className="font-semibold text-lg">{w.name}</h2>
             <p className="text-gray-500 text-sm">

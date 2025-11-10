@@ -52,12 +52,12 @@ function App() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/tasks" element={<TaskList />} />
                             <Route path="/addtasks" element={<AddTaskModal />} />
-                            <Route path="/workspaces" element={<WorkspaceList />} />
 
                             {/* Collaboration workspace routes */}
+                            <Route path="/workspaces" element={<WorkspaceList />} />
                             <Route path="/workspace/:id" element={<WorkspaceDashboard  />} />
-                            <Route path="/workspace/:id/tasks" element={<TaskList />} />
                             <Route path="/create-workspace" element={<CreateWorkspace />} />
+                            <Route path="/workspace/:id/tasks" element={<TaskList />} />
                             <Route path="/workspace/join" element={<JoinWorkspace />} />
                             <Route path="/workspace/:id/members" element={<WorkspaceMembers />} />
 
