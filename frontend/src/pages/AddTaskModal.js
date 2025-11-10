@@ -2,16 +2,26 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTask } from "../service/api";
 import { ArrowLeftCircle } from "lucide-react";
+import { useWorkspace } from "../context/WorkspaceContext";
+import { useSocket } from "../context/SocketContext";
 
 const AddTaskPage = () => {
+  const { workspaceId } = useWorkspace();
   const navigate = useNavigate();
+  const { socket } = useSocket();
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    category: "General",
     priority: "Medium",
     dueDate: "",
   });
+  
+  // eslint-disable-next-line
+  const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line
+  const [error, setError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,12 +30,23 @@ const AddTaskPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      // eslint-disable-next-line
-      const res = await createTask(formData);
-      navigate("/tasks");
+      const res = await createTask(workspaceId, formData); // pass workspaceId
+      socket.emit("taskCreated", res.data, workspaceId); // emit actual task
+      // redirect to correct page
+      if (workspaceId) {
+        navigate(`/workspace/${workspaceId}/tasks`);
+      } else {
+        navigate("/tasks");
+      }
     } catch (err) {
       console.error("Failed to create task:", err);
+      setError("Failed to create task. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

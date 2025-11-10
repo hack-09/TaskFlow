@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
 const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
+    const { socket, isConnected } = useSocket();
     const [updatedTask, setUpdatedTask] = useState({
         dueDate: "",
         priority: "",
@@ -32,6 +34,7 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
             });
             onClose(); // Close modal after update
             onUpdate(updatedTask); // Refresh task list
+            socket.emit("taskUpdated", { ...task, ...updatedTask });
         } catch (err) {
             console.error("Failed to update task:", err);
         }

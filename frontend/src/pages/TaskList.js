@@ -3,9 +3,11 @@ import { FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import EditTaskModal from '../components/EditTaskModal';
 import { deleteTask } from "../service/api";
+import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
-const TaskList = () => {
+const TaskList = ({workspaceId}) => {
+    const { socket, isConnected } = useSocket();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tasks, setTasks] = useState([]);
@@ -23,11 +25,38 @@ const TaskList = () => {
     const filterStyle = "border p-2 rounded-lg w-full md:w-1/4 focus:ring-2 focus:ring-blue-600 dark:bg-gray-200";
 
     useEffect(() => {
+        if (!socket) return;
+        
+        if (workspaceId) socket.emit("joinWorkspace", workspaceId);
+
+        socket.on(workspaceId ? "workspaceTaskUpdated" : "taskUpdated", (updatedTask) => {
+        setTasks(prev => prev.map(t => t._id === updatedTask._id ? updatedTask : t));
+        });
+
+        socket.on("newTask", (newTask) => {
+            setTasks((prev) => [newTask, ...prev]);
+        });
+
+        socket.on("taskDeleted", (deletedTaskId) => {
+            setTasks((prev) => prev.filter((t) => t._id !== deletedTaskId));
+        });
+
+        return () => {
+            if (workspaceId) socket.emit("leaveWorkspace", workspaceId);
+            socket.off("workspaceTaskUpdated");
+            socket.off("taskUpdated");
+            socket.off("newTask");
+            socket.off("taskDeleted");
+        };
+    }, [socket, workspaceId]);
+
+    useEffect(() => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
-                    headers: { Authorization: `Bearer ${token}` },
+                const endpoint = workspaceId ? `/workspaces/${workspaceId}/tasks` : '/tasks';
+                const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 });
                 setTasks(res.data);
                 setFilteredTasks(res.data);
@@ -36,7 +65,7 @@ const TaskList = () => {
             }
         };
         fetchTasks();
-    }, []);
+    }, [workspaceId]);
 
     useEffect(() => {
         let updatedTasks = tasks;
@@ -110,7 +139,7 @@ const TaskList = () => {
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-800">
             <div className="w-full p-6">
-                <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks</h1>
+                <h1 className="text-3xl font-bold text-blue-600 mb-6">Your Tasks {isConnected ? "🟢 Online" : "🔴 Offline"}</h1>
 
                 {/* Filter Section */}
                 <div className="flex flex-wrap gap-4 mb-6">

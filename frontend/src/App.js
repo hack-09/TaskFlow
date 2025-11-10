@@ -1,53 +1,80 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
-import TaskList from './pages/TaskList';
-import RegisterPage from './pages/RegisterPage';
-import LandingPage from './pages/LandingPage';
-import Documentation from './pages/Documentation';
-import Contact from './pages/Contact';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import AddTaskModal from './pages/AddTaskModal';
-import ProtectedRoute from './components/ProtectedRoute';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import Navbar from "./components/Navbar";
+import Dashboard from "./pages/Dashboard";
+import TaskList from "./pages/TaskList";
+import RegisterPage from "./pages/RegisterPage";
+import LandingPage from "./pages/LandingPage";
+import Documentation from "./pages/Documentation";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import AddTaskModal from "./pages/AddTaskModal";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { SocketProvider } from "./context/SocketContext";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
+import CreateWorkspace from "./pages/Workspaces/CreateWorkspace";
+import JoinWorkspace from "./pages/Workspaces/JoinWorkspace";
+import WorkspaceList from "./pages/Workspaces/WorkspaceList";
+import WorkspaceMembers from "./pages/Workspaces/WorkspaceMembers";
+import WorkspaceDashboard from "./pages/WorkspaceDashboard";
+import "./App.css";
 
 function App() {
   return (
     <Router>
-      <div className="h-screen">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/documentation" element={<Documentation />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
+      <SocketProvider>
+        <WorkspaceProvider>
+            <div className="h-screen">
+              <Routes>
+                {/* ---------- Public Routes ---------- */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/documentation" element={<Documentation />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="*"
-            element={
-              <ProtectedRoute>
-                <div className="flex w-full">
-                  <Navbar />
-                  <div className="flex-1 bg-gray-800">
-                    <Routes>
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/tasks" element={<TaskList />} />
-                      <Route path="/addtasks" element={<AddTaskModal />} />
-                    </Routes>
-                  </div>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
+                {/* ---------- Protected (Authenticated) Routes ---------- */}
+                <Route
+                  path="*"
+                  element={
+                    <ProtectedRoute>
+                      <div className="flex w-full">
+                        <Navbar />
+                        <div className="flex-1 bg-gray-800">
+                          <Routes>
+                            {/* Personal workspace routes */}
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/tasks" element={<TaskList />} />
+                            <Route path="/addtasks" element={<AddTaskModal />} />
+                            <Route path="/workspaces" element={<WorkspaceList />} />
+
+                            {/* Collaboration workspace routes */}
+                            <Route
+                              path="/workspace/:id"
+                              element={<WorkspaceDashboard  />}
+                            />
+                            <Route
+                              path="/workspace/:id/tasks"
+                              element={<TaskList />}
+                            />
+                            <Route path="/create-workspace" element={<CreateWorkspace />} />
+                            <Route path="/workspaces/join" element={<JoinWorkspace />} />
+                            <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
+
+                          </Routes>
+                        </div>
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </div>
+        </WorkspaceProvider>
+      </SocketProvider>
     </Router>
   );
 }

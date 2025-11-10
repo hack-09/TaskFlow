@@ -1,87 +1,149 @@
 import React, { useEffect, useState } from "react";
+import { useWorkspace } from "../context/WorkspaceContext";
+import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
 const Dashboard = () => {
+  const { workspaceId } = useWorkspace();
+  const { socket } = useSocket();
+
   const [tasks, setTasks] = useState([]);
   const [summary, setSummary] = useState({
     total: 0,
     pending: 0,
+    inProgress: 0,
     completed: 0,
     overdue: 0,
   });
 
-  // Fetch tasks from the backend
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const endpoint = workspaceId
+        ? `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}/tasks`
+        : `${process.env.REACT_APP_ARI_CALL_URL}/tasks`;
+
+      const res = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setTasks(res.data);
+      calculateSummary(res.data);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+    }
+  };
+
+  const calculateSummary = (taskList) => {
+    const total = taskList.length;
+    const pending = taskList.filter((t) => t.status === "pending").length;
+    const inProgress = taskList.filter((t) => t.status === "in progress").length;
+    const completed = taskList.filter((t) => t.status === "completed").length;
+    const overdue = taskList.filter(
+      (t) =>
+        t.status !== "completed" &&
+        t.dueDate &&
+        new Date(t.dueDate) < new Date()
+    ).length;
+    setSummary({ total, pending, inProgress, completed, overdue });
+  };
+
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTasks(res.data);
-
-        // Calculate summary
-        const total = res.data.length;
-        const pending = res.data.filter((task) => !task.completed).length;
-        const completed = res.data.filter((task) => task.completed).length;
-        const overdue = res.data.filter(
-          (task) =>
-            !task.completed && new Date(task.dueDate) < new Date()
-        ).length;
-
-        setSummary({ total, pending, completed, overdue });
-      } catch (err) {
-        console.error("Failed to fetch tasks:", err);
-      }
-    };
     fetchTasks();
-  }, []);
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    if (workspaceId) socket.emit("joinWorkspace", workspaceId);
+    else socket.emit("leaveAllWorkspaces");
+
+    return () => {
+      if (workspaceId) socket.emit("leaveWorkspace", workspaceId);
+    };
+  }, [socket, workspaceId]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const updateEvent = workspaceId ? "workspaceTaskUpdated" : "taskUpdated";
+    const createEvent = workspaceId ? "workspaceTaskCreated" : "taskCreated";
+    const deleteEvent = workspaceId ? "workspaceTaskDeleted" : "taskDeleted";
+
+    const handleUpdate = (updatedTask) => {
+      setTasks((prev) => {
+        const exists = prev.some((t) => t._id === updatedTask._id);
+        const newTasks = exists
+          ? prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+          : [updatedTask, ...prev];
+        calculateSummary(newTasks);
+        return newTasks;
+      });
+    };
+
+    const handleDelete = (deletedTaskId) => {
+      setTasks((prev) => {
+        const newTasks = prev.filter((t) => t._id !== deletedTaskId);
+        calculateSummary(newTasks);
+        return newTasks;
+      });
+    };
+
+    const handleCreate = (newTask) => {
+      setTasks((prev) => {
+        const newTasks = [newTask, ...prev];
+        calculateSummary(newTasks);
+        return newTasks;
+      });
+    };
+
+    socket.on(updateEvent, handleUpdate);
+    socket.on(createEvent, handleCreate);
+    socket.on(deleteEvent, handleDelete);
+
+    return () => {
+      socket.off(updateEvent);
+      socket.off(createEvent);
+      socket.off(deleteEvent);
+    };
+  }, [socket, workspaceId]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">Welcome to Your Dashboard</h1>
-        
-        {/* Task Summary */}
-        <div className="bg-white dark:bg-gray-300 shadow rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">Task Summary</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-blue-100 text-blue-700 p-4 rounded-lg text-center">
-              <p className="text-lg font-medium">Total</p>
-              <p className="text-2xl font-bold">{summary.total}</p>
-            </div>
-            <div className="bg-yellow-100 text-yellow-700 p-4 rounded-lg text-center">
-              <p className="text-lg font-medium">Pending</p>
-              <p className="text-2xl font-bold">{summary.pending}</p>
-            </div>
-            <div className="bg-green-100 text-green-700 p-4 rounded-lg text-center">
-              <p className="text-lg font-medium">Completed</p>
-              <p className="text-2xl font-bold">{summary.completed}</p>
-            </div>
-            <div className="bg-red-100 text-red-700 p-4 rounded-lg text-center">
-              <p className="text-lg font-medium">Overdue</p>
-              <p className="text-2xl font-bold">{summary.overdue}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Tasks */}
-        <div className="bg-white dark:bg-gray-400 shadow rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">Recent Tasks</h2>
-          <ul className="space-y-3">
-            {tasks.slice(0, 5).map((task) => (
-              <li
-                key={task._id}
-                className="p-4 bg-gray-100 dark:bg-gray-200 rounded-lg flex justify-between items-center"
-              >
-                <span className="font-medium text-gray-800">{task.title}</span>
-                <span className="text-sm text-gray-600">Priority: {task.priority}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
+    <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-800">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-blue-600">
+          {workspaceId ? "Workspace Dashboard" : "Personal Dashboard"}
+        </h1>
+        <span className="text-gray-500 text-sm">
+          {tasks.length} {workspaceId ? "Workspace" : "Personal"} Tasks
+        </span>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="p-4 bg-white rounded shadow">Total: {summary.total}</div>
+        <div className="p-4 bg-yellow-100 rounded shadow">Pending: {summary.pending}</div>
+        <div className="p-4 bg-blue-100 rounded shadow">In Progress: {summary.inProgress}</div>
+        <div className="p-4 bg-green-100 rounded shadow">Completed: {summary.completed}</div>
+        <div className="p-4 bg-red-100 rounded shadow">Overdue: {summary.overdue}</div>
+      </div>
+
+      {tasks.length === 0 ? (
+        <p className="text-gray-400 text-center mt-10">
+          No tasks found for this {workspaceId ? "workspace" : "account"}.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {tasks.map((task) => (
+            <div key={task._id} className="p-4 bg-white rounded shadow hover:bg-gray-50">
+              <h2 className="font-semibold text-lg">{task.title}</h2>
+              <p>Status: <span className="font-medium">{task.status}</span></p>
+              <p>Priority: {task.priority}</p>
+              <p>Category: {task.category}</p>
+              <p>Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
