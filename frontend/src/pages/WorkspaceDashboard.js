@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import jwtDecode from "jwt-decode";
 import axios from "axios";
 import { Users, ListCheck, Activity, UserPlus, ArrowLeft } from "lucide-react";
 import { useSocket } from "../context/SocketContext";
@@ -17,6 +18,8 @@ function WorkspaceDashboard() {
 
   const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
   const token = localStorage.getItem("token");
+  const decoded = token ? jwtDecode(token) : null;
+  const userId = decoded?.id || decoded?._id; 
 
   // Fetch workspace details
   const fetchWorkspace = async () => {
@@ -27,7 +30,7 @@ function WorkspaceDashboard() {
       });
       const data = res.data.workspace || res.data;
       setWorkspace(data);
-      setIsAdmin(data?.isAdmin || false);
+      setIsAdmin(data?.ownerId._id == userId || false);
     } catch (err) {
       console.error("Error fetching workspace:", err);
       setError("Unable to load workspace data");
