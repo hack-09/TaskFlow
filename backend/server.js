@@ -4,8 +4,7 @@ const dotenv = require("dotenv");
 const cors = require('cors');
 const http = require("http");
 const { Server } = require("socket.io");
-
-require("./routes/scheduler")
+require("./utils/taskReminderScheduler");
 
 dotenv.config();
 
