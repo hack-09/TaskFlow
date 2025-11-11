@@ -91,7 +91,7 @@ app.use("/workspaces", workspaceRoutes);
 const activityRoutes = require("./routes/activityRoutes");
 app.use("/activity", activityRoutes);
 
-const notificationRoutes = require("./routes/notifications");
+const notificationRoutes = require("./routes/notificationRoutes");
 app.use("/notifications", notificationRoutes);
 
 // ─────────────────────────────────────────────

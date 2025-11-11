@@ -15,6 +15,7 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import AddTaskModal from "./pages/AddTaskModal";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ActivityLog from "./components/ActivityLog";
+import { Toaster } from "react-hot-toast";
 import { SocketProvider } from "./context/SocketContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import CreateWorkspace from "./pages/Workspaces/CreateWorkspace";

@@ -29,3 +29,10 @@ export const deleteTask = (taskId) =>
 // ------------------- NOTIFICATIONS -------------------
 
 export const fetchNotifications = () => API.get("/notifications");
+
+export const markNotificationAsRead = (id) =>
+  API.put(`/notifications/${id}/read`);
+
+export const markAllNotificationsRead = () =>
+  API.put(`/notifications/read/all`);
+

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 import {
   Home,
   ListCheck,
@@ -63,6 +64,10 @@ function Navbar() {
     <nav className="bg-blue-600 text-white">
       <div className="w-64 h-full bg-blue-600 dark:bg-blue-900 text-white flex flex-col p-4 hidden lg:flex lg:flex-col">
         <h2 className="text-2xl font-bold mb-8">Navigation</h2>
+        <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-900">
+          <h1 className="text-lg font-bold">TaskCollab</h1>
+          <NotificationBell />
+        </div>
 
         {/* Personal Section */}
         <button
