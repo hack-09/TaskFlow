@@ -8,6 +8,7 @@ const logActivity = require("../utils/logActivity");
 exports.createTask = async (req, res) => {
   try {
     const { title, description, dueDate, status, category, priority, workspaceId } = req.body;
+    const userId = req.user?.id || req.user?._id || req.user;
 
     let taskData = {
       title,
@@ -25,8 +26,8 @@ exports.createTask = async (req, res) => {
       if (!workspace) return res.status(404).json({ error: "Workspace not found" });
 
       const isMember =
-        workspace.owner.toString() === req.user ||
-        workspace.members.some((m) => m.user.toString() === req.user);
+        workspace.ownerId.toString() === userId ||
+        workspace.members.some((m) => m.user.toString() === userId);
 
       if (!isMember)
         return res.status(403).json({ error: "You are not a member of this workspace" });
@@ -54,6 +55,7 @@ exports.createTask = async (req, res) => {
 exports.getTasks = async (req, res) => {
   try {
     const { workspaceId, category, priority, title, dueDate } = req.query;
+    const userId = req.user?.id || req.user?._id || req.user;
     const query = {};
 
     if (workspaceId) {
@@ -61,11 +63,19 @@ exports.getTasks = async (req, res) => {
       if (!workspace) return res.status(404).json({ error: "Workspace not found" });
 
       const isMember =
-        workspace.owner.toString() === req.user ||
-        workspace.members.some((m) => m.user.toString() === req.user);
+        workspace.ownerId.toString() === userId ||
+        workspace.members?.some((m) => m.user?.toString() === userId);
 
       if (!isMember)
-        return res.status(403).json({ error: "You are not authorized to view this workspace" });
+        return res.status(403).json({
+          error:
+            "You are not authorized to view this workspace",
+          debug: {
+            workspaceId,
+            ownerId: workspace.ownerId.toString(),
+            userId
+          }
+        });
 
       query.workspaceId = workspaceId;
     } else {
@@ -98,7 +108,7 @@ exports.updateTask = async (req, res) => {
     if (task.workspaceId) {
       const workspace = await Workspace.findById(task.workspaceId);
       const isAdmin =
-        workspace.owner.toString() === req.user ||
+        workspace.ownerId.toString() === req.user ||
         workspace.members.some(
           (m) => m.user.toString() === req.user && m.role === "admin"
         );
@@ -137,7 +147,7 @@ exports.deleteTask = async (req, res) => {
     if (task.workspaceId) {
       const workspace = await Workspace.findById(task.workspaceId);
       const isAdmin =
-        workspace.owner.toString() === req.user ||
+        workspace.ownerId.toString() === req.user ||
         workspace.members.some(
           (m) => m.user.toString() === req.user && m.role === "admin"
         );

@@ -9,7 +9,7 @@ import axios from "axios";
 
 const TaskList = () => {
     const { id } = useParams();
-    const workspaceId = id || null;
+    const workspaceId = id;
     const { socket, isConnected } = useSocket();
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,8 +106,6 @@ const TaskList = () => {
 
     const handleDelete = async (taskId) => {
         try {
-            // eslint-disable-next-line
-            const token = localStorage.getItem("token");
             await deleteTask(taskId);
             setTasks(tasks.filter((task) => task._id !== taskId));
             setConfirmDelete(null);
@@ -195,7 +193,7 @@ const TaskList = () => {
                     />
 
                     <button
-                        onClick={() => navigate('/addtasks')}
+                        onClick={() => navigate(workspaceId? `/workspace/${workspaceId}/addtasks`:'/addtasks')}
                         className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
                     >
                         Add New Task

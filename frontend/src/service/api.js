@@ -10,26 +10,21 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-/**
- * Helper to generate endpoint based on workspace context
- */
-const taskEndpoint = (workspaceId) =>
-  workspaceId ? `/workspaces/${workspaceId}/tasks` : "/tasks";
-
 // ------------------- TASKS -------------------
 
 // Pass workspaceId explicitly when calling these
+
 export const fetchTasks = (workspaceId, query) =>
-  API.get(taskEndpoint(workspaceId), { params: query });
+  API.get("/tasks", { params: { ...query, workspaceId } });
 
 export const createTask = (workspaceId, taskData) =>
-  API.post(taskEndpoint(workspaceId), taskData);
+  API.post("/tasks", { ...taskData, workspaceId });
 
-export const updateTask = (workspaceId, taskId, updates) =>
-  API.put(`${taskEndpoint(workspaceId)}/${taskId}`, updates);
+export const updateTask = (taskId, updates) =>
+  API.put(`/tasks/${taskId}`, updates);
 
-export const deleteTask = (workspaceId, taskId) =>
-  API.delete(`${taskEndpoint(workspaceId)}/${taskId}`);
+export const deleteTask = (taskId) =>
+  API.delete(`/tasks/${taskId}`);
 
 // ------------------- NOTIFICATIONS -------------------
 

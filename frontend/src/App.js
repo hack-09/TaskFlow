@@ -58,6 +58,7 @@ function App() {
                             <Route path="/workspaces" element={<WorkspaceList />} />
                             <Route path="/workspace/:id" element={<WorkspaceDashboard  />} />
                             <Route path="/create-workspace" element={<CreateWorkspace />} />
+                            <Route path="/workspace/:id/addtasks" element={<AddTaskModal />} />
                             <Route path="/workspace/:id/tasks" element={<TaskList />} />
                             <Route path="/workspace/:id/activity" element={<ActivityLog />} />
                             <Route path="/workspace/join" element={<JoinWorkspace />} />
