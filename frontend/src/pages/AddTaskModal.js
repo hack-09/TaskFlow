@@ -12,9 +12,12 @@ import {
   Loader2,
   Sparkles,
   Clock,
-  Zap
+  Zap,
+  Brain,
+  Wand2
 } from "lucide-react";
 import { useSocket } from "../context/SocketContext";
+import { toast } from "react-toastify";
 
 const AddTaskPage = () => {
   const { id: workspaceId } = useParams();
@@ -32,6 +35,11 @@ const AddTaskPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [touched, setTouched] = useState({});
+  const [aiLoading, setAiLoading] = useState({
+    priority: false,
+    description: false,
+    dueDate: false
+  });
 
   const categories = [
     { value: "Work", label: "Work", icon: "💼", color: "blue" },
@@ -47,6 +55,97 @@ const AddTaskPage = () => {
     { value: "Medium", label: "Medium Priority", icon: Target, color: "yellow" },
     { value: "Low", label: "Low Priority", icon: Clock, color: "green" }
   ];
+
+  // ✅ AI Smart Priority Suggestion
+  const handleAIPrioritySuggestion = async () => {
+    if (!formData.title && !formData.description) {
+      toast.error("Please fill title or description first.");
+      return;
+    }
+
+    try {
+      setAiLoading(prev => ({ ...prev, priority: true }));
+      toast.loading("Analyzing task priority...");
+
+      const res = await fetch("http://localhost:5000/ai/smart-priority", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          dueDate: formData.dueDate,
+        }),
+      });
+
+      const data = await res.json();
+      toast.dismiss();
+
+      if (data.suggestedPriority) {
+        setFormData((prev) => ({
+          ...prev,
+          priority: data.suggestedPriority,
+        }));
+        toast.success(`🤖 AI suggests: ${data.suggestedPriority} priority`);
+      } else {
+        toast.error("AI could not determine priority");
+      }
+    } catch (err) {
+      console.error("AI Suggestion failed:", err);
+      toast.dismiss();
+      toast.error("AI Suggestion failed");
+    } finally {
+      setAiLoading(prev => ({ ...prev, priority: false }));
+    }
+  };
+
+  // 🎯 AI Description Suggestion (Placeholder - API to be developed)
+  const handleAIDescriptionSuggestion = async () => {
+    if (!formData.title) {
+      toast.error("Please fill task title first.");
+      return;
+    }
+
+    try {
+      setAiLoading(prev => ({ ...prev, description: true }));
+      toast.info("AI Description suggestion coming soon!");
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        setAiLoading(prev => ({ ...prev, description: false }));
+      }, 1500);
+
+    } catch (err) {
+      console.error("AI Description Suggestion failed:", err);
+      setAiLoading(prev => ({ ...prev, description: false }));
+      toast.error("AI Description suggestion failed");
+    }
+  };
+
+  // 📅 AI Due Date Suggestion (Placeholder - API to be developed)
+  const handleAIDueDateSuggestion = async () => {
+    if (!formData.title && !formData.description) {
+      toast.error("Please fill title or description first.");
+      return;
+    }
+
+    try {
+      setAiLoading(prev => ({ ...prev, dueDate: true }));
+      toast.info("AI Due Date suggestion coming soon!");
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        setAiLoading(prev => ({ ...prev, dueDate: false }));
+      }, 1500);
+
+    } catch (err) {
+      console.error("AI Due Date Suggestion failed:", err);
+      setAiLoading(prev => ({ ...prev, dueDate: false }));
+      toast.error("AI Due Date suggestion failed");
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -108,11 +207,6 @@ const AddTaskPage = () => {
     return priorityObj ? priorityObj.color : "gray";
   };
 
-  const getCategoryColor = (category) => {
-    const categoryObj = categories.find(c => c.value === category);
-    return categoryObj ? categoryObj.color : "gray";
-  };
-
   const minDate = new Date().toISOString().split('T')[0];
 
   return (
@@ -129,7 +223,7 @@ const AddTaskPage = () => {
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Organize your work and boost your productivity
+            Organize your work and boost your productivity with AI assistance
           </p>
         </div>
 
@@ -180,12 +274,33 @@ const AddTaskPage = () => {
               )}
             </div>
 
-            {/* Task Description */}
+            {/* Task Description with AI Button */}
             <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <FileText className="w-4 h-4" />
-                <span>Description *</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <FileText className="w-4 h-4" />
+                  <span>Description *</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAIDescriptionSuggestion}
+                  disabled={aiLoading.description}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    aiLoading.description
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-md"
+                  }`}
+                >
+                  {aiLoading.description ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {aiLoading.description ? "Thinking..." : "AI Enhance"}
+                  </span>
+                </button>
+              </div>
               <textarea
                 name="description"
                 placeholder="Describe your task in detail..."
@@ -210,12 +325,33 @@ const AddTaskPage = () => {
 
             {/* Priority and Category Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Priority */}
+              {/* Priority with AI Button */}
               <div className="space-y-3">
-                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  <Zap className="w-4 h-4" />
-                  <span>Priority</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <Zap className="w-4 h-4" />
+                    <span>Priority</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAIPrioritySuggestion}
+                    disabled={aiLoading.priority}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                      aiLoading.priority
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md"
+                    }`}
+                  >
+                    {aiLoading.priority ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Brain className="w-4 h-4" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {aiLoading.priority ? "Analyzing..." : "AI Suggest"}
+                    </span>
+                  </button>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   {priorities.map((priority) => {
                     const Icon = priority.icon;
@@ -261,12 +397,33 @@ const AddTaskPage = () => {
               </div>
             </div>
 
-            {/* Due Date */}
+            {/* Due Date with AI Button */}
             <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <Calendar className="w-4 h-4" />
-                <span>Due Date *</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Calendar className="w-4 h-4" />
+                  <span>Due Date *</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAIDueDateSuggestion}
+                  disabled={aiLoading.dueDate}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    aiLoading.dueDate
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md"
+                  }`}
+                >
+                  {aiLoading.dueDate ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {aiLoading.dueDate ? "Calculating..." : "AI Suggest"}
+                  </span>
+                </button>
+              </div>
               <input
                 type="date"
                 name="dueDate"
@@ -324,13 +481,13 @@ const AddTaskPage = () => {
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-3">
             <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300">Pro Tips</h3>
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300">AI Assistant Features</h3>
           </div>
           <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-2">
-            <li>• Be specific with your task titles for better organization</li>
-            <li>• Set realistic due dates to manage your workload effectively</li>
-            <li>• Use categories to group related tasks together</li>
-            <li>• High priority tasks will be highlighted for quick attention</li>
+            <li>• <strong>AI Priority:</strong> Automatically suggests optimal priority based on task content</li>
+            <li>• <strong>AI Description:</strong> Coming soon - Enhance your task descriptions with AI</li>
+            <li>• <strong>AI Due Date:</strong> Coming soon - Get smart due date suggestions</li>
+            <li>• All AI features work in real-time to boost your productivity</li>
           </ul>
         </div>
       </div>

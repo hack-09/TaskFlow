@@ -54,7 +54,7 @@ exports.createTask = async (req, res) => {
 // ✅ Get All Tasks (Personal + Workspace)
 exports.getTasks = async (req, res) => {
   try {
-    const { workspaceId, category, priority, title, dueDate } = req.query;
+    const { workspaceId, category, priority, title, dueDate, page=1, limit=10 } = req.query;
     const userId = req.user?.id || req.user?._id || req.user;
     const query = {};
 
@@ -87,8 +87,24 @@ exports.getTasks = async (req, res) => {
     if (title) query.title = { $regex: title, $options: "i" };
     if (dueDate) query.dueDate = { $lte: new Date(dueDate) };
 
-    const tasks = await Task.find(query);
-    res.status(200).json(tasks);
+    const pageNum = Math.max(parseInt(page), 1);
+    const limitNum = Math.max(parseInt(limit), 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalTasks = await Task.countDocuments(query);
+    const tasks = await Task.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      success: true,
+      totalTasks,
+      totalPages: Math.ceil(totalTasks / limitNum),
+      currentPage: pageNum,
+      limit: limitNum,
+      tasks,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch tasks" });
@@ -252,19 +268,13 @@ exports.getTaskStats = async (req, res) => {
     let filter = {};
 
     if (workspaceId) {
-      // ---- Case 1: Workspace-level stats ----
       filter.workspaceId = workspaceId;
     } else {
-      // ---- Case 2: Personal tasks only ----
-      filter = {
-        userId: userId, // created by the logged-in user
-      };
+      filter.userId = userId;
     }
 
-    // Now fetch strictly matching tasks
     const tasks = await Task.find(filter);
 
-    // ---- Basic stats ----
     const total = tasks.length;
     const completed = tasks.filter(t => t.status === "completed").length;
     const pending = total - completed;
@@ -278,7 +288,17 @@ exports.getTaskStats = async (req, res) => {
       }
     });
 
-    // ---- Top contributors (only for workspace) ----
+    // ---- Tasks completed per week ----
+    const perWeek = {};
+    tasks.forEach(t => {
+      if (t.status === "completed" && t.updatedAt) {
+        const d = new Date(t.updatedAt);
+        const week = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
+        perWeek[week] = (perWeek[week] || 0) + 1;
+      }
+    });
+
+    // ---- Top contributors ----
     let topContributors = [];
     if (workspaceId && workspaceId !== "personal") {
       const contributorCount = {};
@@ -293,7 +313,14 @@ exports.getTaskStats = async (req, res) => {
         .slice(0, 5);
     }
 
-    res.json({ total, completed, pending, perDay, topContributors });
+    // ---- Task Priority Distribution ----
+    const priorityDistribution = {};
+    tasks.forEach(t => {
+      const p = t.priority || "Unspecified";
+      priorityDistribution[p] = (priorityDistribution[p] || 0) + 1;
+    });
+
+    res.json({ total, completed, pending, perDay, perWeek, topContributors, priorityDistribution });
   } catch (err) {
     console.error("Error in getTaskStats:", err);
     res.status(500).json({ message: "Failed to fetch task stats" });

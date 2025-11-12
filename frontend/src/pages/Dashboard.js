@@ -22,8 +22,9 @@ const Dashboard = () => {
       const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTasks(res.data);
-      calculateSummary(res.data);
+      const fetchedTasks = res.data.tasks || [];
+      setTasks(fetchedTasks);
+      calculateSummary(fetchedTasks);
     } catch (err) {
       console.error("Failed to fetch personal tasks:", err);
     }
@@ -46,6 +47,29 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  const getTaskBadge = (task) => {
+    const now = new Date();
+    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+    const badges = [];
+
+    if (task.priority === "High" && dueDate && (dueDate - now) < 24*60*60*1000 && task.status !== "completed") {
+      badges.push("⚠️ Urgent");
+    }
+    if (task.priority === "High" && dueDate && (dueDate - now) < 24*60*60*1000 && task.status !== "completed") {
+      badges.push("⚠️ Urgent");
+    }
+
+    if (dueDate && dueDate < now && task.status !== "completed") {
+      badges.push("⏰ Overdue");
+    }
+
+    if (task.status === "in progress") {
+      badges.push("🔄 Ongoing");
+    }
+
+    return badges;
+  };
 
   return (
     <div className="p-6 min-h-screen bg-gray-100 dark:bg-gray-800">
@@ -80,6 +104,17 @@ const Dashboard = () => {
               <p>Priority: {task.priority}</p>
               <p>Category: {task.category}</p>
               <p>Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}</p>
+
+              {/* Smart badges */}
+              {(
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  {getTaskBadge(task).map((b, idx) => (
+                    <span key={idx} className="text-xs bg-red-200 dark:bg-red-700 text-red-800 dark:text-red-200 px-2 py-1 rounded-full">
+                      {b}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

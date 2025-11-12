@@ -75,8 +75,9 @@ const TaskList = () => {
                 const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setTasks(res.data);
-                setFilteredTasks(res.data);
+                const fetchedTasks = res.data.tasks || [];
+                setTasks(fetchedTasks);
+                setFilteredTasks(fetchedTasks);
             } catch (err) {
                 console.error("Failed to fetch tasks:", err);
             } finally {
@@ -436,6 +437,8 @@ const TaskList = () => {
                             </div>
                         ))}
                     </div>
+
+                    
                 )}
 
                 {/* Edit Task Modal */}
