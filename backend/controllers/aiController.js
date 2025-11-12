@@ -1,40 +1,50 @@
-const OpenAI = require("openai");
-const Task = require("../models/taskModel");
+import axios from "axios";
+import { getCache, setCache } from "../middleware/cache.js";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const HF_API_URL = "https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli";
+const HF_API_KEY = process.env.HF_TOKEN;
 
-// --- Predict priority based on task title/description ---
-exports.suggestPriority = async (req, res) => {
+export async function getSmartPriority(req, res) {
   try {
-    const { title, description } = req.body;
+    const userId = req.user?.id || "guest";
+    const { taskTitle, description, deadline } = req.body;
+
+    const cacheKey = `priority-${taskTitle}-${description}-${deadline}`;
+    const cached = getCache(userId, cacheKey);
+    if (cached) return res.json({ success: true, source: "cache", data: cached });
 
     const prompt = `
-    Based on the following task details, suggest a priority:
-    Title: "${title}"
-    Description: "${description}"
-    Choose only one: Low, Medium, or High.
+    Analyze the following task and suggest its priority as Low, Medium, or High.
+    Task: ${taskTitle}
+    Description: ${description}
+    Due Date: ${deadline || "No due date"}
+    Respond only with one word: Low, Medium, or High.
     `;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-    });
+    const response = await axios.post(
+      HF_API_URL,
+      { inputs: prompt },
+      { headers: { Authorization: `Bearer ${HF_API_KEY}` } }
+    );
 
-    const aiReply = response.choices[0].message.content.trim();
-    res.json({ suggestedPriority: aiReply });
-  } catch (err) {
-    console.error("AI Priority Suggestion Error:", err.message);
-    res.status(500).json({ message: "Failed to suggest priority" });
+    const prediction = response.data?.[0]?.generated_text?.trim() || "Medium";
+
+    setCache(userId, cacheKey, prediction);
+    res.json({ success: true, source: "api", data: prediction });
+  } catch (error) {
+    console.error("AI Priority Suggestion Error:", error.message);
+    res.status(500).json({ success: false, message: "AI request failed" });
   }
-};
+}
 
-// --- Suggest new due date if overdue or blocked ---
-exports.suggestDeadline = async (req, res) => {
+export async function suggestDeadline(req, res) {
   try {
+    const userId = req.user?.id || "guest";
     const { dueDate, status, dependencies } = req.body;
-    const overdue = new Date(dueDate) < new Date();
+
+    const cacheKey = `deadline-${dueDate}-${status}-${dependencies?.join(",")}`;
+    const cached = getCache(userId, cacheKey);
+    if (cached) return res.json({ success: true, source: "cache", data: cached });
 
     const prompt = `
     A task has status "${status}" and its due date was ${dueDate}.
@@ -42,15 +52,18 @@ exports.suggestDeadline = async (req, res) => {
     Should the deadline be extended? Suggest a new realistic due date (in ISO format).
     `;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-    });
+    const response = await axios.post(
+      HF_API_URL,
+      { inputs: prompt },
+      { headers: { Authorization: `Bearer ${HF_API_KEY}` } }
+    );
 
-    const suggestion = response.choices[0].message.content.trim();
-    res.json({ suggestedDeadline: suggestion });
+    const suggestion = response.data?.[0]?.generated_text?.trim() || "2025-12-31";
+
+    setCache(userId, cacheKey, suggestion);
+    res.json({ success: true, source: "api", data: suggestion });
   } catch (err) {
     console.error("AI Deadline Suggestion Error:", err.message);
-    res.status(500).json({ message: "Failed to suggest deadline" });
+    res.status(500).json({ success: false, message: "AI request failed" });
   }
-};
+}
