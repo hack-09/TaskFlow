@@ -12,7 +12,8 @@ router.put("/:id", authMiddleware, checkRole(["admin"]), workspaceController.upd
 router.delete("/:id", authMiddleware, checkRole(["admin"]), workspaceController.deleteWorkspace);
 
 // Member management
-router.post("/:id/invite", authMiddleware, checkRole(["admin"]), workspaceController.inviteMember);
-router.delete("/:id/members/:memberId", authMiddleware, checkRole(["admin"]), workspaceController.removeMember);
+router.post("/:workspaceId/invite", authMiddleware, checkRole(["admin"]), workspaceController.inviteMember);
+router.delete("/:workspaceId/members/:memberId", authMiddleware, checkRole(["admin"]), workspaceController.removeMember);
+router.post("/invite/:inviteId/respond", authMiddleware, workspaceController.respondInvite);
 
 module.exports = router;

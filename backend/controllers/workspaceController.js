@@ -1,6 +1,7 @@
 const Workspace = require("../models/Workspace");
 const User = require("../models/User");
 const logActivity = require("../utils/logActivity");
+const Invite = require("../models/Invite");
 const sendNotification = require("../utils/sendNotification");
 
 // ------------------ CREATE WORKSPACE ------------------
@@ -136,17 +137,33 @@ exports.inviteMember = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) return res.status(404).json({ message: "Workspace not found" });
 
+    // Check if user is authorized to invite
     if (!workspace.members.includes(req.user))
       return res.status(403).json({ message: "You are not a member of this workspace" });
 
     const userToAdd = await User.findOne({ email });
     if (!userToAdd) return res.status(404).json({ message: "User not found" });
 
-    if (workspace.members.includes(userToAdd._id))
-      return res.status(400).json({ message: "User already in workspace" });
+    // Prevent duplicate or pending invites
+    const existingInvite = await Invite.findOne({
+      workspaceId,
+      invitedUser: userToAdd._id,
+      status: "pending",
+    });
 
-    workspace.members.push(userToAdd._id);
-    await workspace.save();
+    if (existingInvite)
+      return res.status(400).json({ message: "Invitation already pending" });
+
+    const invite = await Invite.create({
+      workspaceId,
+      invitedBy: req.user,
+      invitedUser: userToAdd._id,
+    });
+
+    sendNotification(
+      userToAdd._id,
+      `You’ve been invited to join "${workspace.name}". Accept or Reject.`
+    );
 
     await logActivity({
       userId: req.user,
@@ -155,10 +172,42 @@ exports.inviteMember = async (req, res) => {
       details: `${email} added to workspace "${workspace.name}"`,
     });
 
-    res.status(200).json({ message: "Member added successfully", workspace });
+    res.status(200).json({ message: "Invitation sent", invite });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to invite member" });
+  }
+};
+
+// ---------------- RESPOND TO INVITATION ---------------
+// POST respond to invite
+exports.respondInvite = async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+    const { response } = req.body; // "accept" or "reject"
+
+    const invite = await Invite.findById(inviteId).populate("workspaceId");
+    if (!invite) return res.status(404).json({ message: "Invite not found" });
+
+    if (invite.status !== "pending")
+      return res.status(400).json({ message: "Invite already handled" });
+
+    if (response === "accept") {
+      // Add user to workspace members
+      invite.workspaceId.members.push(invite.invitedUser);
+      await invite.workspaceId.save();
+      invite.status = "accepted";
+      sendNotification(invite.invitedBy, `User accepted your workspace invite.`);
+    } else {
+      invite.status = "rejected";
+      sendNotification(invite.invitedBy, `User rejected your workspace invite.`);
+    }
+
+    await invite.save();
+    res.status(200).json({ message: `Invitation ${invite.status}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to respond to invite" });
   }
 };
 
@@ -192,3 +241,4 @@ exports.removeMember = async (req, res) => {
     res.status(500).json({ error: "Failed to remove member" });
   }
 };
+

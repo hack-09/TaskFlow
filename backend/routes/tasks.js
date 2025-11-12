@@ -15,4 +15,6 @@ router.post("/:id/subtasks", authMiddleware, taskController.addSubtask);
 router.put("/:id/subtasks/:subtaskId", authMiddleware, taskController.updateSubtask);
 router.delete("/:id/subtasks/:subtaskId", authMiddleware, taskController.deleteSubtask);
 
+router.get("/taskstats", authMiddleware, taskController.getTaskStats);
+
 module.exports = router;

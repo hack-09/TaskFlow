@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   fetchNotifications,
   markNotificationAsRead,
   markAllNotificationsRead,
+  respondToInvitation,
 } from "../service/api";
 import { useSocket } from "../context/SocketContext";
 
 export default function NotificationBell() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const { socket } = useSocket();
@@ -24,10 +27,7 @@ export default function NotificationBell() {
     if (!socket) return;
 
     socket.on("notification", (notif) => {
-      // Add new notification to list
       setNotifications((prev) => [notif, ...prev]);
-
-      // Show live toast
       toast.custom((t) => (
         <div
           className={`${
@@ -71,6 +71,23 @@ export default function NotificationBell() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  // ✅ Handle invitation response (accept/decline)
+  const handleInvitationResponse = async (inviteId, action) => {
+    try {
+      const res = await respondToInvitation(inviteId, action);
+      toast.success(res.data.message || `Invitation ${action}ed successfully`);
+      // Mark notification as read
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.inviteId === inviteId ? { ...n, read: true } : n
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to respond to invitation");
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -86,7 +103,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-50 max-h-96 overflow-y-auto" style={{ left: "1rem" }}>
           <div className="flex justify-between items-center p-2 border-b dark:border-gray-700">
             <h4 className="font-semibold text-gray-700 dark:text-gray-200">
               Notifications
@@ -101,25 +118,72 @@ export default function NotificationBell() {
             )}
           </div>
 
+          <div className="p-2 text-center border-t dark:border-gray-700">
+            <button
+              onClick={() => navigate("/notifications")}
+              className="text-blue-600 text-sm hover:underline"
+            >
+              View all notifications →
+            </button>
+
+            <button
+              onClick={() => navigate("/invitations")}
+              className="text-green-600 text-sm hover:underline"
+            >
+              View workspace invitations →
+            </button>
+          </div>
+
           {notifications.length === 0 ? (
             <p className="p-4 text-gray-500 text-sm">No notifications</p>
           ) : (
             notifications.map((n) => (
               <div
                 key={n._id}
-                onClick={() => handleMarkAsRead(n._id)}
-                className={`p-3 border-b cursor-pointer ${
+                className={`p-3 border-b ${
                   !n.read
                     ? "bg-blue-50 dark:bg-gray-700 hover:bg-blue-100"
                     : "hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
               >
-                <p className="text-sm text-gray-800 dark:text-gray-100">
-                  {n.message}
-                </p>
-                <span className="text-xs text-gray-500">
-                  {new Date(n.createdAt).toLocaleString()}
-                </span>
+                {/* If it's a workspace invite */}
+                {n.type === "workspace_invite" ? (
+                  <>
+                    <p className="text-sm text-gray-800 dark:text-gray-100 font-medium">
+                      📩 {n.message}
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() =>
+                          handleInvitationResponse(n.inviteId, "accept")
+                        }
+                        className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleInvitationResponse(n.inviteId, "decline")
+                        }
+                        className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p
+                      className="text-sm text-gray-800 dark:text-gray-100 cursor-pointer"
+                      onClick={() => handleMarkAsRead(n._id)}
+                    >
+                      {n.message}
+                    </p>
+                    <span className="text-xs text-gray-500">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </span>
+                  </>
+                )}
               </div>
             ))
           )}

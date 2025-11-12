@@ -1,31 +1,60 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { createTask } from "../service/api";
-import { ArrowLeftCircle } from "lucide-react";
-import { useWorkspace } from "../context/WorkspaceContext";
+import { 
+  ArrowLeft, 
+  PlusCircle, 
+  Calendar, 
+  Tag, 
+  AlertCircle,
+  FileText,
+  Target,
+  Loader2,
+  Sparkles,
+  Clock,
+  Zap
+} from "lucide-react";
 import { useSocket } from "../context/SocketContext";
 
 const AddTaskPage = () => {
-  const { workspaceId } = useWorkspace();
+  const { id: workspaceId } = useParams();
   const navigate = useNavigate();
   const { socket } = useSocket();
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "General",
+    category: "Work",
     priority: "Medium",
     dueDate: "",
   });
   
-  // eslint-disable-next-line
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState({});
+
+  const categories = [
+    { value: "Work", label: "Work", icon: "💼", color: "blue" },
+    { value: "Personal", label: "Personal", icon: "👤", color: "green" },
+    { value: "Health", label: "Health", icon: "🏥", color: "red" },
+    { value: "Education", label: "Education", icon: "🎓", color: "purple" },
+    { value: "Finance", label: "Finance", icon: "💰", color: "emerald" },
+    { value: "Other", label: "Other", icon: "📝", color: "gray" }
+  ];
+
+  const priorities = [
+    { value: "High", label: "High Priority", icon: Zap, color: "red" },
+    { value: "Medium", label: "Medium Priority", icon: Target, color: "yellow" },
+    { value: "Low", label: "Low Priority", icon: Clock, color: "green" }
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   const handleSubmit = async (e) => {
@@ -33,87 +62,289 @@ const AddTaskPage = () => {
     setLoading(true);
     setError("");
 
+    // Mark all fields as touched
+    setTouched({
+      title: true,
+      description: true,
+      dueDate: true
+    });
+
+    // Basic validation
+    if (!formData.title.trim() || !formData.description.trim() || !formData.dueDate) {
+      setError("Please fill in all required fields.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await createTask(workspaceId, formData); // pass workspaceId
-      socket.emit("taskCreated", res.data, workspaceId); // emit actual task
-      // redirect to correct page
-      if (workspaceId) {
-        navigate(`/workspace/${workspaceId}/tasks`);
-      } else {
-        navigate("/tasks");
+      const res = await createTask(workspaceId, formData);
+      if (socket) {
+        socket.emit("taskCreated", res.data, workspaceId);
       }
+      
+      // Success animation delay
+      setTimeout(() => {
+        if (workspaceId) {
+          navigate(`/workspace/${workspaceId}/tasks`, { 
+            state: { message: "Task created successfully! 🎉" }
+          });
+        } else {
+          navigate("/tasks", { 
+            state: { message: "Task created successfully! 🎉" }
+          });
+        }
+      }, 500);
+      
     } catch (err) {
       console.error("Failed to create task:", err);
-      setError("Failed to create task. Please try again.");
+      setError(err.response?.data?.message || "Failed to create task. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const getPriorityColor = (priority) => {
+    const priorityObj = priorities.find(p => p.value === priority);
+    return priorityObj ? priorityObj.color : "gray";
+  };
+
+  const getCategoryColor = (category) => {
+    const categoryObj = categories.find(c => c.value === category);
+    return categoryObj ? categoryObj.color : "gray";
+  };
+
+  const minDate = new Date().toISOString().split('T')[0];
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-blue-800 p-4 dark:from-gray-900 dark:to-black-800">
-      <div className="bg-white dark:bg-gray-400 shadow-xl rounded-2xl p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-blue-700">Add New Task</h2>
-          <ArrowLeftCircle
-            className="w-8 h-8 text-blue-700 cursor-pointer hover:text-blue-900"
-            onClick={() => navigate("/tasks")}
-          />
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="title"
-            placeholder="Task Title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
-          <textarea
-            name="description"
-            placeholder="Task Description"
-            value={formData.description}
-            onChange={handleInputChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-            rows={4}
-          ></textarea>
-          <select
-            name="priority"
-            value={formData.priority}
-            onChange={handleInputChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
-          <input
-            type="date"
-            name="dueDate"
-            value={formData.dueDate}
-            onChange={handleInputChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate("/tasks")}
-              className="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all duration-300"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300"
-            >
-              Add Task
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <PlusCircle className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Create New Task
+            </h1>
           </div>
-        </form>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Organize your work and boost your productivity
+          </p>
+        </div>
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 transition-colors duration-200 group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+          <span>Back to Tasks</span>
+        </button>
+
+        {/* Form Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 p-8">
+          {error && (
+            <div className="flex items-center space-x-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded-xl mb-6 animate-fade-in">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Task Title */}
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <FileText className="w-4 h-4" />
+                <span>Task Title *</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                placeholder="What needs to be done?"
+                value={formData.title}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur('title')}
+                required
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none transition-all duration-300 ${
+                  touched.title && !formData.title.trim()
+                    ? 'border-red-300 focus:ring-2 focus:ring-red-500'
+                    : 'border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                }`}
+              />
+              {touched.title && !formData.title.trim() && (
+                <p className="text-red-500 text-xs flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Task title is required</span>
+                </p>
+              )}
+            </div>
+
+            {/* Task Description */}
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <FileText className="w-4 h-4" />
+                <span>Description *</span>
+              </label>
+              <textarea
+                name="description"
+                placeholder="Describe your task in detail..."
+                value={formData.description}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur('description')}
+                required
+                rows={4}
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none transition-all duration-300 resize-none ${
+                  touched.description && !formData.description.trim()
+                    ? 'border-red-300 focus:ring-2 focus:ring-red-500'
+                    : 'border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                }`}
+              ></textarea>
+              {touched.description && !formData.description.trim() && (
+                <p className="text-red-500 text-xs flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Task description is required</span>
+                </p>
+              )}
+            </div>
+
+            {/* Priority and Category Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Priority */}
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Zap className="w-4 h-4" />
+                  <span>Priority</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {priorities.map((priority) => {
+                    const Icon = priority.icon;
+                    return (
+                      <button
+                        key={priority.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, priority: priority.value }))}
+                        className={`p-3 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
+                          formData.priority === priority.value
+                            ? `bg-${priority.color}-100 dark:bg-${priority.color}-900/20 border-${priority.color}-500 text-${priority.color}-700 dark:text-${priority.color}-300 shadow-md`
+                            : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center space-y-1">
+                          <Icon className="w-4 h-4" />
+                          <span className="text-xs font-medium">{priority.label.split(' ')[0]}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Tag className="w-4 h-4" />
+                  <span>Category</span>
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                >
+                  {categories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.icon} {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <Calendar className="w-4 h-4" />
+                <span>Due Date *</span>
+              </label>
+              <input
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleInputChange}
+                onBlur={() => handleBlur('dueDate')}
+                min={minDate}
+                required
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border rounded-xl focus:outline-none transition-all duration-300 ${
+                  touched.dueDate && !formData.dueDate
+                    ? 'border-red-300 focus:ring-2 focus:ring-red-500'
+                    : 'border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                }`}
+              />
+              {touched.dueDate && !formData.dueDate && (
+                <p className="text-red-500 text-xs flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Due date is required</span>
+                </p>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                disabled={loading}
+                className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Creating Task...</span>
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="w-5 h-5" />
+                    <span>Create Task</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Quick Tips */}
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
+          <div className="flex items-center space-x-3 mb-3">
+            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300">Pro Tips</h3>
+          </div>
+          <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-2">
+            <li>• Be specific with your task titles for better organization</li>
+            <li>• Set realistic due dates to manage your workload effectively</li>
+            <li>• Use categories to group related tasks together</li>
+            <li>• High priority tasks will be highlighted for quick attention</li>
+          </ul>
+        </div>
       </div>
+
+      {/* Animation Styles */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

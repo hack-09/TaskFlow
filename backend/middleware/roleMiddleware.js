@@ -16,7 +16,7 @@ const checkRole = (requiredRoles = []) => {
         return res.status(404).json({ error: "Workspace not found" });
 
       // Allow owner full access
-      if (workspace.owner.toString() === req.user) {
+      if (workspace.ownerId.toString() === req.user) {
         req.workspace = workspace;
         return next();
       }

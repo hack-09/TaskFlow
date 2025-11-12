@@ -26,6 +26,9 @@ export const updateTask = (taskId, updates) =>
 export const deleteTask = (taskId) =>
   API.delete(`/tasks/${taskId}`);
 
+export const fetchTaskStats = (workspaceId) =>
+  API.get("/tasks/taskstats", { params: { workspaceId } });
+
 // ------------------- NOTIFICATIONS -------------------
 
 export const fetchNotifications = () => API.get("/notifications");
@@ -35,4 +38,14 @@ export const markNotificationAsRead = (id) =>
 
 export const markAllNotificationsRead = () =>
   API.put(`/notifications/read/all`);
+
+// -------------------INVITATIONS -------------------
+export const inviteMember = (workspaceId, email) =>
+  API.post(`/workspaces/${workspaceId}/invite`, { email });
+
+export const removeMember = (workspaceId, memberId) =>
+  API.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+
+export const respondToInvitation = (inviteId, action) =>
+  API.post(`/workspaces/invite/${inviteId}/respond/`, { action });
 

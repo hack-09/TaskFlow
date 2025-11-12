@@ -93,6 +93,9 @@ app.use("/activity", activityRoutes);
 const notificationRoutes = require("./routes/notificationRoutes");
 app.use("/notifications", notificationRoutes);
 
+// const invitationRoutes = require("./routes/invitationRoutes");
+// app.use("/invite", invitationRoutes);
+
 // ─────────────────────────────────────────────
 // Start Server
 // ─────────────────────────────────────────────

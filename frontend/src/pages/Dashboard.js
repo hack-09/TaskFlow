@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useSocket } from "../context/SocketContext";
+import TaskAnalytics from "../components/TaskAnalytics";
 import axios from "axios";
 
 const Dashboard = () => {
@@ -56,6 +57,7 @@ const Dashboard = () => {
           {tasks.length} {"Personal"} Tasks
         </span>
       </div>
+      <TaskAnalytics />
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="p-4 bg-white rounded shadow">Total: {summary.total}</div>

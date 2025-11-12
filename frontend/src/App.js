@@ -23,6 +23,9 @@ import JoinWorkspace from "./pages/Workspaces/JoinWorkspace";
 import WorkspaceList from "./pages/Workspaces/WorkspaceList";
 import WorkspaceMembers from "./pages/Workspaces/WorkspaceMembers";
 import WorkspaceDashboard from "./pages/WorkspaceDashboard";
+import InviteMembersModal from "./pages/Workspaces/InviteMembersModal";
+import Invitations from "./components/Invitations";
+import NotificationsPage from "./pages/Notifications";
 import "./App.css";
 
 function App() {
@@ -61,10 +64,12 @@ function App() {
                             <Route path="/create-workspace" element={<CreateWorkspace />} />
                             <Route path="/workspace/:id/addtasks" element={<AddTaskModal />} />
                             <Route path="/workspace/:id/tasks" element={<TaskList />} />
-                            <Route path="/workspace/:id/invite" element={<TaskList />} />
+                            <Route path="/workspace/:id/invite" element={<InviteMembersModal />} />
                             <Route path="/workspace/:id/activity" element={<ActivityLog />} />
                             <Route path="/workspace/join" element={<JoinWorkspace />} />
                             <Route path="/workspace/:id/members" element={<WorkspaceMembers />} />
+                            <Route path="/invitations" element={<Invitations />} />
+                            <Route path="/notifications" element={<NotificationsPage />} />
 
                           </Routes>
                         </div>

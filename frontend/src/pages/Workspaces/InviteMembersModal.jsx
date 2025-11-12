@@ -1,16 +1,17 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 
-const InviteMembersModal = ({ workspaceId, onClose }) => {
+const InviteMembersModal = () => {
+  const {id} = useParams();
   const [email, setEmail] = useState("");
 
   const handleInvite = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}/invite`, { email }, {
+      await axios.post(`${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${id}/invite`, { email }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      onClose();
     } catch (err) {
       console.error(err);
     }

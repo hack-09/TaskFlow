@@ -241,3 +241,61 @@ exports.deleteSubtask = async (req, res) => {
     res.status(500).json({ error: "Failed to delete subtask" });
   }
 };
+
+// ------------------ FETCH TASK STATISTICS ------------------
+exports.getTaskStats = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user;
+    console.log("Fetching task stats for:", { workspaceId, userId });
+
+    let filter = {};
+
+    if (workspaceId) {
+      // ---- Case 1: Workspace-level stats ----
+      filter.workspaceId = workspaceId;
+    } else {
+      // ---- Case 2: Personal tasks only ----
+      filter = {
+        userId: userId, // created by the logged-in user
+      };
+    }
+
+    // Now fetch strictly matching tasks
+    const tasks = await Task.find(filter);
+
+    // ---- Basic stats ----
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === "completed").length;
+    const pending = total - completed;
+
+    // ---- Tasks completed per day ----
+    const perDay = {};
+    tasks.forEach(t => {
+      if (t.status === "completed" && t.updatedAt) {
+        const date = new Date(t.updatedAt).toLocaleDateString();
+        perDay[date] = (perDay[date] || 0) + 1;
+      }
+    });
+
+    // ---- Top contributors (only for workspace) ----
+    let topContributors = [];
+    if (workspaceId && workspaceId !== "personal") {
+      const contributorCount = {};
+      tasks.forEach(t => {
+        const id = t.assignedTo?.toString() || t.userId?.toString();
+        if (id) contributorCount[id] = (contributorCount[id] || 0) + 1;
+      });
+
+      topContributors = Object.entries(contributorCount)
+        .map(([user, count]) => ({ user, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    }
+
+    res.json({ total, completed, pending, perDay, topContributors });
+  } catch (err) {
+    console.error("Error in getTaskStats:", err);
+    res.status(500).json({ message: "Failed to fetch task stats" });
+  }
+};

@@ -1,32 +1,33 @@
 import React, { useEffect, useState } from "react";
-import {
-  getWorkspaceDetails,
-  removeWorkspace,
-} from "../../service/workspaceService";
 import axios from "axios";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { inviteMember, removeMember } from "../../service/api";
 
 const WorkspaceMembers = () => {
   const { workspaceId } = useWorkspace();
   const [workspace, setWorkspace] = useState(null);
-  const [inviteEmail, setInviteEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Fetch workspace details (members, name, etc.)
   const fetchWorkspace = async () => {
     if (!workspaceId) return;
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
         `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setWorkspace(data);
+      setLoading(false);
     } catch (err) {
       console.error("Failed to fetch workspace:", err);
-      setError("Could not load workspace details.");
+      setMessage({ type: "error", text: "Could not load workspace details." });
+      setLoading(false);
     }
   };
 
@@ -37,22 +38,24 @@ const WorkspaceMembers = () => {
   // Invite new member by email
   const handleInvite = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    if (!inviteEmail.trim()) {
+      setMessage({ type: "error", text: "Please enter a valid email." });
+      return;
+    }
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}/invite`,
-        { email: inviteEmail },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuccess("Invitation sent successfully!");
+      setLoading(true);
+      const res = await inviteMember(workspaceId, inviteEmail);
+      setMessage({ type: "success", text: res.data.message || "Invitation sent!" });
       setInviteEmail("");
-      fetchWorkspace(); // refresh member list
+      await fetchWorkspace(); // Reload workspace to show new member
     } catch (err) {
-      console.error("Invite failed:", err);
-      setError("Failed to send invitation.");
+      console.error(err);
+      setMessage({
+        type: "error",
+        text:
+          err.response?.data?.message ||
+          "Failed to invite user. Check email or permissions.",
+      });
     } finally {
       setLoading(false);
     }
@@ -60,17 +63,17 @@ const WorkspaceMembers = () => {
 
   // Remove a member (admin only)
   const handleRemove = async (memberId) => {
-    if (!window.confirm("Remove this member?")) return;
+    if (!window.confirm("Are you sure you want to remove this member?")) return;
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}/members/${memberId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchWorkspace();
+      await removeMember(workspaceId, memberId);
+      setMessage({ type: "success", text: "Member removed successfully." });
+      await fetchWorkspace();
     } catch (err) {
-      console.error("Remove failed:", err);
-      alert("Failed to remove member");
+      console.error(err);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to remove member.",
+      });
     }
   };
 
@@ -83,14 +86,14 @@ const WorkspaceMembers = () => {
 
   return (
     <div className="p-6 bg-gray-100 dark:bg-gray-800 min-h-screen">
-      <h1 className="text-3xl font-bold text-blue-600 mb-4">
-        Members of Workspace: {workspace?.name}
+      <h1 className="text-3xl font-bold text-blue-600 mb-6">
+        Members of Workspace: {workspace?.name || "Loading..."}
       </h1>
 
       {/* Invite Section */}
       <form
         onSubmit={handleInvite}
-        className="flex flex-col md:flex-row gap-2 mb-6"
+        className="flex flex-col md:flex-row gap-3 mb-6"
       >
         <input
           type="email"
@@ -98,39 +101,54 @@ const WorkspaceMembers = () => {
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           required
-          className="border p-2 rounded flex-1"
+          className="border p-3 rounded flex-1 dark:bg-gray-700 dark:text-white"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow disabled:opacity-60"
         >
-          {loading ? "Sending..." : "Send Invite"}
+          {loading ? "Processing..." : "Send Invite"}
         </button>
       </form>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {success && <p className="text-green-500 mb-2">{success}</p>}
+
+      {/* Message Alerts */}
+      {message.text && (
+        <p
+          className={`mb-4 text-center font-medium ${
+            message.type === "error"
+              ? "text-red-600"
+              : "text-green-600"
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
 
       {/* Members List */}
-      <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md p-4">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+      <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md p-5">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
           Members ({workspace?.members?.length || 0})
         </h2>
-        {workspace?.members?.length > 0 ? (
+
+        {loading ? (
+          <p className="text-gray-500">Loading members...</p>
+        ) : workspace?.members?.length > 0 ? (
           <ul className="divide-y divide-gray-200 dark:divide-gray-600">
             {workspace.members.map((member) => (
               <li
                 key={member._id}
-                className="flex justify-between items-center py-2"
+                className="flex justify-between items-center py-3"
               >
                 <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-100">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {member.name || member.email}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 capitalize">
                     {member.role === "admin" ? "Admin" : "Member"}
                   </p>
                 </div>
+
                 {workspace.role === "admin" && member.role !== "admin" && (
                   <button
                     onClick={() => handleRemove(member._id)}

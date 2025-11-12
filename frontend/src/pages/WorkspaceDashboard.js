@@ -96,22 +96,6 @@ function WorkspaceDashboard() {
           </p>
         </div>
 
-        {/* Invite Members */}
-        {isAdmin && (
-          <div
-            onClick={() => navigate(`/workspace/${id}/invite`)}
-            className="cursor-pointer bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 hover:shadow-xl transition"
-          >
-            <div className="flex items-center mb-2">
-              <UserPlus className="w-6 h-6 mr-2 text-green-500" />
-              <h2 className="text-lg font-semibold">Invite Members</h2>
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Invite new members to collaborate in this workspace.
-            </p>
-          </div>
-        )}
-
         {/* Activity Log */}
         <div
           onClick={() => navigate(`/workspace/${id}/activity`)}
