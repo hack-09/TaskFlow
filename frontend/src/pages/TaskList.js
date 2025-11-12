@@ -12,7 +12,11 @@ import {
   FaCalendarAlt,
   FaTag,
   FaBolt,
-  FaEllipsisV
+  FaEllipsisV,
+  FaChevronLeft,
+  FaChevronRight,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import EditTaskModal from '../components/EditTaskModal';
@@ -33,6 +37,14 @@ const TaskList = () => {
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [loading, setLoading] = useState(true);
+    
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalTasks, setTotalTasks] = useState(0);
+    const [limit] = useState(10);
+    const [paginationLoading, setPaginationLoading] = useState(false);
+
     const [filters, setFilters] = useState({
         status: "",
         priority: "",
@@ -66,25 +78,52 @@ const TaskList = () => {
         };
     }, [socket, workspaceId]);
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
+    const fetchTasks = async (pageNum = 1, filters = {}) => {
+        try {
+            if (pageNum === 1) {
                 setLoading(true);
-                const token = localStorage.getItem("token");
-                const endpoint = workspaceId ? `/tasks?workspaceId=${workspaceId}` : '/tasks';
-                const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const fetchedTasks = res.data.tasks || [];
-                setTasks(fetchedTasks);
-                setFilteredTasks(fetchedTasks);
-            } catch (err) {
-                console.error("Failed to fetch tasks:", err);
-            } finally {
-                setLoading(false);
+            } else {
+                setPaginationLoading(true);
             }
-        };
-        fetchTasks();
+            
+            const token = localStorage.getItem("token");
+            
+            // Build query parameters
+            const params = new URLSearchParams({
+                page: pageNum,
+                limit: limit,
+                ...filters
+            });
+
+            // Add search term if provided
+            if (searchTerm) {
+                params.append('search', searchTerm);
+            }
+
+            const endpoint = workspaceId 
+                ? `/tasks?workspaceId=${workspaceId}&${params}`
+                : `/tasks?${params}`;
+
+            const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data.success) {
+                setTasks(res.data.tasks);
+                setTotalPages(res.data.totalPages);
+                setTotalTasks(res.data.totalTasks);
+                setPage(res.data.currentPage);
+            }
+        } catch (err) {
+            console.error("Failed to fetch paginated tasks:", err);
+        } finally {
+            setLoading(false);
+            setPaginationLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTasks(1, filters);
     }, [workspaceId]);
 
     useEffect(() => {
@@ -122,10 +161,20 @@ const TaskList = () => {
         setFilteredTasks(updatedTasks);
     }, [tasks, searchTerm, filters]);
 
+    // Handle search and filter changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchTasks(1, filters);
+        }, 500); // Debounce search
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, filters]);
+
     const handleDelete = async (taskId) => {
         try {
             await deleteTask(taskId);
-            setTasks(tasks.filter((task) => task._id !== taskId));
+            // Refresh the current page after deletion
+            fetchTasks(page, filters);
             setConfirmDelete(null);
         } catch (err) {
             console.error("Failed to delete task:", err);
@@ -161,6 +210,7 @@ const TaskList = () => {
             category: "",
         });
         setSearchTerm("");
+        fetchTasks(1, {});
     };
 
     const getPriorityIcon = (priority) => {
@@ -217,6 +267,35 @@ const TaskList = () => {
         }
     };
 
+    // Pagination handlers
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setPage(newPage);
+            fetchTasks(newPage, filters);
+            // Scroll to top when changing pages
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    // Generate page numbers for pagination
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+        
+        let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+        
+        return pages;
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -247,7 +326,7 @@ const TaskList = () => {
                                 <span>{isConnected ? "Live Updates" : "Offline"}</span>
                             </div>
                             <span className="text-gray-500 dark:text-gray-400">
-                                {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
+                                {totalTasks} total task{totalTasks !== 1 ? 's' : ''} • Page {page} of {totalPages}
                             </span>
                         </div>
                     </div>
@@ -343,8 +422,15 @@ const TaskList = () => {
                     )}
                 </div>
 
+                {/* Loading indicator for pagination */}
+                {paginationLoading && (
+                    <div className="flex justify-center mb-4">
+                        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                )}
+
                 {/* Task Grid */}
-                {filteredTasks.length === 0 ? (
+                {tasks.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
                         <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FaSearch className="w-8 h-8 text-gray-400" />
@@ -366,79 +452,147 @@ const TaskList = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {filteredTasks.map((task) => (
-                            <div
-                                key={task._id}
-                                className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-700 transition-all duration-500 transform hover:scale-105 relative overflow-hidden"
-                            >
-                                {/* Priority Indicator Bar */}
-                                <div className={`absolute top-0 left-0 w-1 h-full ${
-                                    task.priority === "High" ? "bg-red-500" :
-                                    task.priority === "Medium" ? "bg-yellow-500" : "bg-green-500"
-                                }`}></div>
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                            {tasks.map((task) => (
+                                <div
+                                    key={task._id}
+                                    className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-700 transition-all duration-500 transform hover:scale-105 relative overflow-hidden"
+                                >
+                                    {/* Priority Indicator Bar */}
+                                    <div className={`absolute top-0 left-0 w-1 h-full ${
+                                        task.priority === "High" ? "bg-red-500" :
+                                        task.priority === "Medium" ? "bg-yellow-500" : "bg-green-500"
+                                    }`}></div>
 
-                                <div className="p-6">
-                                    {/* Task Header */}
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white pr-8 line-clamp-2">
-                                            {task.title}
-                                        </h3>
-                                        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <button
-                                                onClick={() => handleEditClick(task)}
-                                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
-                                            >
-                                                <FaEdit size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => setConfirmDelete(task._id)}
-                                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                                            >
-                                                <FaTrash size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Task Description */}
-                                    {task.description && (
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                                            {task.description}
-                                        </p>
-                                    )}
-
-                                    {/* Task Meta Information */}
-                                    <div className="space-y-3">
-                                        {/* Status and Priority */}
-                                        <div className="flex justify-between items-center">
-                                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-medium ${getStatusColor(task.status, task.dueDate)}`}>
-                                                {getStatusIcon(task.status, task.dueDate)}
-                                                <span>{getStatusText(task.status, task.dueDate)}</span>
-                                            </div>
-                                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                                {getPriorityIcon(task.priority)}
-                                                <span>{task.priority}</span>
+                                    <div className="p-6">
+                                        {/* Task Header */}
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white pr-8 line-clamp-2">
+                                                {task.title}
+                                            </h3>
+                                            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                <button
+                                                    onClick={() => handleEditClick(task)}
+                                                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                                                >
+                                                    <FaEdit size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmDelete(task._id)}
+                                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                                                >
+                                                    <FaTrash size={14} />
+                                                </button>
                                             </div>
                                         </div>
 
-                                        {/* Category and Due Date */}
-                                        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                                            <div className="flex items-center space-x-2">
-                                                <FaTag className="w-3 h-3" />
-                                                <span>{task.category}</span>
+                                        {/* Task Description */}
+                                        {task.description && (
+                                            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+                                                {task.description}
+                                            </p>
+                                        )}
+
+                                        {/* Task Meta Information */}
+                                        <div className="space-y-3">
+                                            {/* Status and Priority */}
+                                            <div className="flex justify-between items-center">
+                                                <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-medium ${getStatusColor(task.status, task.dueDate)}`}>
+                                                    {getStatusIcon(task.status, task.dueDate)}
+                                                    <span>{getStatusText(task.status, task.dueDate)}</span>
+                                                </div>
+                                                <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                                    {getPriorityIcon(task.priority)}
+                                                    <span>{task.priority}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center space-x-2">
-                                                <FaCalendarAlt className="w-3 h-3" />
-                                                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+
+                                            {/* Category and Due Date */}
+                                            <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center space-x-2">
+                                                    <FaTag className="w-3 h-3" />
+                                                    <span>{task.category}</span>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <FaCalendarAlt className="w-3 h-3" />
+                                                    <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    
+                        {/* Enhanced Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Showing {tasks.length} of {totalTasks} tasks
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    {/* First Page */}
+                                    <button
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={page === 1}
+                                        className="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    >
+                                        <FaAngleDoubleLeft className="w-3 h-3" />
+                                    </button>
+
+                                    {/* Previous Page */}
+                                    <button
+                                        onClick={() => handlePageChange(page - 1)}
+                                        disabled={page === 1}
+                                        className="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    >
+                                        <FaChevronLeft className="w-3 h-3" />
+                                    </button>
+
+                                    {/* Page Numbers */}
+                                    <div className="flex items-center gap-1">
+                                        {getPageNumbers().map((pageNum) => (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => handlePageChange(pageNum)}
+                                                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${
+                                                    page === pageNum
+                                                        ? 'bg-blue-600 text-white shadow-md transform scale-105'
+                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Next Page */}
+                                    <button
+                                        onClick={() => handlePageChange(page + 1)}
+                                        disabled={page === totalPages}
+                                        className="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    >
+                                        <FaChevronRight className="w-3 h-3" />
+                                    </button>
+
+                                    {/* Last Page */}
+                                    <button
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={page === totalPages}
+                                        className="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    >
+                                        <FaAngleDoubleRight className="w-3 h-3" />
+                                    </button>
+                                </div>
+
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Page {page} of {totalPages}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Edit Task Modal */}

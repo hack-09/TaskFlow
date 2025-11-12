@@ -39,6 +39,10 @@ export const markNotificationAsRead = (id) =>
 export const markAllNotificationsRead = () =>
   API.put(`/notifications/read/all`);
 
+export const deleteNotification = (id) => {
+  API.delete(`/notifications/${id}`);
+};
+
 // -------------------INVITATIONS -------------------
 export const inviteMember = (workspaceId, email) =>
   API.post(`/workspaces/${workspaceId}/invite`, { email });
