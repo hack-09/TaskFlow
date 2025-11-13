@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWorkspace } from "../context/WorkspaceContext";
 import { useSocket } from "../context/SocketContext";
 import TaskAnalytics from "../components/TaskAnalytics";
 import { fetchTasks } from "../service/api";
@@ -17,11 +16,12 @@ import {
   Users,
   Target
 } from "lucide-react";
-import axios from "axios";
 
 const Dashboard = () => {
+  // eslint-disable-next-line
   const { socket } = useSocket();
   const navigate = useNavigate();
+  // eslint-disable-next-line
   const [tasks, setTasks] = useState([]);
   const [recentTasks, setRecentTasks] = useState([]);
   const [summary, setSummary] = useState({
@@ -66,6 +66,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTaskDetails();
+    // eslint-disable-next-line
   }, []);
 
   const getTaskBadge = (task) => {

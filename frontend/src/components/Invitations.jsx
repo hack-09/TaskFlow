@@ -40,6 +40,7 @@ const Invitations = () => {
 
   useEffect(() => {
     fetchInvites();
+    // eslint-disable-next-line
   }, []);
 
   const respondToInvite = async (inviteId, action) => {

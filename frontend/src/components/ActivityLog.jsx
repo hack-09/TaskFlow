@@ -15,7 +15,6 @@ import {
   Calendar,
   Search,
   Users,
-  FolderOpen
 } from "lucide-react";
 
 const ActivityLog = () => {
@@ -29,23 +28,19 @@ const ActivityLog = () => {
 
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
   const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    fetchLogs();
-  }, [workspaceId]);
-
+  
   const fetchLogs = async () => {
     try {
       setLoading(true);
       setError(null);
       const url = workspaceId
-        ? `${API_BASE}/activity?workspaceId=${workspaceId}`
-        : `${API_BASE}/activity`;
-
+      ? `${API_BASE}/activity?workspaceId=${workspaceId}`
+      : `${API_BASE}/activity`;
+      
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      
       setLogs(res.data || []);
     } catch (err) {
       console.error("Error fetching activity logs:", err);
@@ -54,7 +49,12 @@ const ActivityLog = () => {
       setLoading(false);
     }
   };
-
+  
+  useEffect(() => {
+    fetchLogs();
+    // eslint-disable-next-line
+  }, [workspaceId]);
+  
   const getActionIcon = (action) => {
     if (action.includes('CREATE') || action.includes('ADD')) {
       return <PlusCircle className="w-4 h-4 text-green-500" />;

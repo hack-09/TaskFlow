@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSocket } from "../context/SocketContext";
 import { updateTask } from "../service/api";
-import axios from "axios";
 import { 
   X, 
   Calendar, 
@@ -85,17 +84,17 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
         "Work", "Personal", "Health", "Education", "Finance", "Other"
     ];
 
-    const getPriorityIcon = (priority) => {
-        const priorityObj = priorities.find(p => p.value === priority);
-        const Icon = priorityObj?.icon || Flag;
-        return <Icon className="w-4 h-4" />;
-    };
+    // const getPriorityIcon = (priority) => {
+    //     const priorityObj = priorities.find(p => p.value === priority);
+    //     const Icon = priorityObj?.icon || Flag;
+    //     return <Icon className="w-4 h-4" />;
+    // };
 
-    const getStatusIcon = (status) => {
-        const statusObj = statuses.find(s => s.value === status);
-        const Icon = statusObj?.icon || Clock;
-        return <Icon className="w-4 h-4" />;
-    };
+    // const getStatusIcon = (status) => {
+    //     const statusObj = statuses.find(s => s.value === status);
+    //     const Icon = statusObj?.icon || Clock;
+    //     return <Icon className="w-4 h-4" />;
+    // };
 
     if (!isOpen) return null;
 

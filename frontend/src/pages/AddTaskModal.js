@@ -196,6 +196,7 @@ const AddTaskPage = () => {
     }
   };
 
+  // eslint-disable-next-line
   const getPriorityColor = (priority) => {
     const priorityObj = priorities.find(p => p.value === priority);
     return priorityObj ? priorityObj.color : "gray";

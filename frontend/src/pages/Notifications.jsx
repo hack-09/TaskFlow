@@ -13,8 +13,6 @@ import {
   Loader2,
   Eye,
   Trash2,
-  Archive,
-  X,
   AlertTriangle
 } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsRead, deleteNotification } from "../service/api";

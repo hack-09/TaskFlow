@@ -3,13 +3,11 @@ import {
   Bell, 
   CheckCheck, 
   X, 
-  Mail, 
   Users, 
   Calendar,
   ArrowRight,
   Loader2,
   Eye,
-  EyeOff,
   UserPlus,
   MessageSquare,
   Sparkles

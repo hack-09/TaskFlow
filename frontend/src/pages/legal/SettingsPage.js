@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Settings as SettingsIcon,
   Bell,
   Shield,
-  Moon,
-  Globe,
   Eye,
-  EyeOff,
   Save,
   Loader2,
-  CheckCircle,
   AlertCircle,
-  Palette,
-  Keyboard,
-  Database
+  Palette,  
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -53,6 +47,7 @@ const SettingsPage = () => {
   //   loadSettings();
   // }, []);
 
+  // eslint-disable-next-line
   const loadSettings = async () => {
     try {
       setLoading(true);

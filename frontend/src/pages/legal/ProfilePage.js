@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { 
   User, 
   Mail, 
-  Calendar, 
   Edit3, 
   Save, 
   X, 
@@ -12,7 +11,6 @@ import {
   Globe,
   Loader2,
   CheckCircle,
-  AlertCircle
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";

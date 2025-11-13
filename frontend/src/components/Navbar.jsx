@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 import {
-  Home,
   ListCheck,
   PlusCircle,
   LogOut,
@@ -17,7 +16,6 @@ import {
   User,
   Sparkles,
   Briefcase,
-  Search,
 } from "lucide-react";
 import axios from "axios";
 

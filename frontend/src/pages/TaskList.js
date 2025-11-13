@@ -12,7 +12,6 @@ import {
   FaCalendarAlt,
   FaTag,
   FaBolt,
-  FaEllipsisV,
   FaChevronLeft,
   FaChevronRight,
   FaAngleDoubleLeft,
@@ -22,7 +21,6 @@ import { useNavigate } from "react-router-dom";
 import EditTaskModal from '../components/EditTaskModal';
 import { fetchTasks, deleteTask } from "../service/api";
 import { useSocket } from "../context/SocketContext";
-import axios from "axios";
 
 const TaskList = () => {
     const { id } = useParams();
@@ -31,7 +29,7 @@ const TaskList = () => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tasks, setTasks] = useState([]);
-    const [filteredTasks, setFilteredTasks] = useState([]);
+    // const [filteredTasks, setFilteredTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -85,9 +83,7 @@ const TaskList = () => {
             } else {
                 setPaginationLoading(true);
             }
-            
-            const token = localStorage.getItem("token");
-            
+                        
             // Build query parameters
             const params = new URLSearchParams({
                 page: pageNum,
@@ -118,6 +114,7 @@ const TaskList = () => {
 
     useEffect(() => {
         fetchTaskDetails(1, filters);
+        // eslint-disable-next-line
     }, [workspaceId]);
 
     useEffect(() => {
@@ -147,12 +144,13 @@ const TaskList = () => {
             );
         }
         if (filters.category) {
+            // eslint-disable-next-line
             updatedTasks = updatedTasks.filter(
                 (task) => task.category === filters.category
             );
         }
 
-        setFilteredTasks(updatedTasks);
+        // setFilteredTasks(updatedTasks);
     }, [tasks, searchTerm, filters]);
 
     // Handle search and filter changes
@@ -162,6 +160,7 @@ const TaskList = () => {
         }, 500); // Debounce search
 
         return () => clearTimeout(timeoutId);
+        // eslint-disable-next-line
     }, [searchTerm, filters]);
 
     const handleDelete = async (taskId) => {

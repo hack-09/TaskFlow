@@ -4,15 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { 
   Plus, 
   Users, 
-  Settings, 
   ArrowRight, 
   Building2, 
   Search, 
-  Filter,
-  Sparkles,
   Loader2,
   MoreVertical,
-  UserPlus,
   Calendar
 } from "lucide-react";
 import { fetchWorkspaces } from "../../service/workspaceService";
