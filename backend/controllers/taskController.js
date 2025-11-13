@@ -263,7 +263,7 @@ exports.getTaskStats = async (req, res) => {
   try {
     const { workspaceId } = req.params;
     const userId = req.user;
-    console.log("Fetching task stats for:", { workspaceId, userId });
+    // console.log("Fetching task stats for:", { workspaceId, userId });
 
     let filter = {};
 

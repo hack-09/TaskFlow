@@ -42,15 +42,15 @@ mongoose
 const userSocketMap = {}; // userId -> socketId
 
 io.on("connection", (socket) => {
-  console.log(`🟢 User connected: ${socket.id}`);
+  // console.log(`🟢 User connected: ${socket.id}`);
 
   socket.on("register", (userId) => {
     userSocketMap[userId] = socket.id;
-    console.log(`User ${userId} registered to socket ${socket.id}`);
+    // console.log(`User ${userId} registered to socket ${socket.id}`);
   });
 
   socket.on("disconnect", () => {
-    console.log(`🔴 User disconnected: ${socket.id}`);
+    // console.log(`🔴 User disconnected: ${socket.id}`);
     for (const [userId, sId] of Object.entries(userSocketMap)) {
       if (sId === socket.id) delete userSocketMap[userId];
     }

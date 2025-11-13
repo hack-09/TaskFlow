@@ -40,9 +40,10 @@ const ProfilePage = () => {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUser(res.data);
+      setUser(res.data.user);
+      console.log("User data:", res.data.user);
       setFormData({
-        name: res.data.name || "",
+        name: res.data.user.name || "",
         email: res.data.email || "",
         bio: res.data.bio || "",
         phone: res.data.phone || "",
@@ -59,10 +60,10 @@ const ProfilePage = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      // const token = localStorage.getItem("token");
-      // await axios.put(`${process.env.REACT_APP_API_URL}/user/profile`, formData, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+      const token = localStorage.getItem("token");
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/auth/user/profile`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       setUser(prev => ({ ...prev, ...formData }));
       setEditing(false);
@@ -77,11 +78,11 @@ const ProfilePage = () => {
 
   const handleCancel = () => {
     setFormData({
-      name: user.name || "",
-      email: user.email || "",
-      bio: user.bio || "",
-      phone: user.phone || "",
-      location: user.location || ""
+      name: user?.name || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
+      phone: user?.phone || "",
+      location: user?.location || ""
     });
     setEditing(false);
   };
@@ -161,7 +162,9 @@ const ProfilePage = () => {
               <div className="text-center mb-6">
                 <div className="relative inline-block">
                   <div className="w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <User className="w-12 h-12 text-white" />
+                    <span className="text-3xl font-bold text-white">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
                   </div>
                   {editing && (
                     <button className="absolute bottom-2 right-2 w-8 h-8 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200">
@@ -170,7 +173,7 @@ const ProfilePage = () => {
                   )}
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {user?.name}
+                  {user?.name || 'User'}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
               </div>
@@ -185,13 +188,15 @@ const ProfilePage = () => {
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Tasks completed</span>
-                  <span className="text-sm font-medium text-green-600">1,247</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Workspaces</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    {user?.workspaces?.length || 0}
+                  </span>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Workspaces</span>
-                  <span className="text-sm font-medium text-blue-600">8</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
+                  <span className="text-sm font-medium text-green-600">Active</span>
                 </div>
               </div>
             </div>
@@ -241,7 +246,7 @@ const ProfilePage = () => {
                     />
                   ) : (
                     <p className="px-4 py-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 rounded-xl">
-                      {user?.name}
+                      {user?.name || "Not provided"}
                     </p>
                   )}
                 </div>

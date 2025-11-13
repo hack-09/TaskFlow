@@ -37,18 +37,15 @@ function Navbar() {
       try {
         const token = localStorage.getItem("token");
         const [userRes, workspacesRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/auth/user`, {
+          axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/workspaces", {
+          axios.get(`${process.env.REACT_APP_API_URL}/workspaces`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         ]);
-        setUser(userRes.data);
+        setUser(userRes.data.user);
         setWorkspaces(workspacesRes.data);
-        // console.log("User workspaces:", userRes.data);
-        // console.log("User Data:", user);
-        // console.log("Workspace Data:", workspaces);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

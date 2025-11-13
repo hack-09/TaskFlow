@@ -35,7 +35,7 @@ exports.createWorkspace = async (req, res) => {
 exports.getUserWorkspaces = async (req, res) => {
   try {
     const userId = req.user; // Comes from authMiddleware
-    console.log("Fetching workspaces for userId:", userId);
+    // console.log("Fetching workspaces for userId:", userId);
 
     const workspaces = await Workspace.find({
       $or: [

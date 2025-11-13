@@ -27,7 +27,7 @@ export function clearUserCache(userId) {
   for (const k of keys) {
     if (k.startsWith(`${userId}:`)) cache.del(k);
   }
-  console.log(`🧹 Cleared cache for user: ${userId}`);
+  // console.log(`🧹 Cleared cache for user: ${userId}`);
 }
 
 export default cache;
