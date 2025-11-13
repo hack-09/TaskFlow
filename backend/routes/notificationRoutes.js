@@ -41,4 +41,18 @@ router.put("/read/all", authMiddleware, async (req, res) => {
   }
 });
 
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const notif = await Notification.findById(req.params.id);
+    if (!notif) return res.status(404).json({ error: "Notification not found" });
+    if (notif.userId.toString() !== req.user.toString())
+      return res.status(403).json({ error: "Unauthorized" });
+    await notif.deleteOne();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete notification" });
+  }
+});
+
 module.exports = router;

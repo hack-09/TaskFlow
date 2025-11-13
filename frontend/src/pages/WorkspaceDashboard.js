@@ -54,7 +54,7 @@ function WorkspaceDashboard() {
 
   // UI
   return (
-    <div className="p-6 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-white">
+    <div className="p-6 dark:bg-gray-900 h-fill text-gray-900 dark:text-white">
       <button
         onClick={() => navigate("/dashboard")}
         className="mb-4 flex items-center text-blue-500 hover:text-blue-700"

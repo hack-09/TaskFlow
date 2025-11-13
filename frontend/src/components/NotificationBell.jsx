@@ -371,7 +371,7 @@ export default function NotificationBell({ isCollapsed = false }) {
       )}
 
       {/* Custom Styles */}
-      <style jsx>{`
+      <style >{`
         @keyframes scale-in {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }

@@ -289,7 +289,7 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
             </div>
 
             {/* Custom Styles */}
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; }
                     to { opacity: 1; }

@@ -46,7 +46,7 @@ const LandingPage = () => {
     : 'bg-gray-50';
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${themeClasses}`}>
+    <div className={`h-fill transition-colors duration-500 ${themeClasses}`}>
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div 

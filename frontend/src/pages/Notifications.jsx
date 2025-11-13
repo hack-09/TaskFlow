@@ -13,7 +13,9 @@ import {
   Loader2,
   Eye,
   Trash2,
-  Archive
+  Archive,
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsRead, deleteNotification } from "../service/api";
 import { useSocket } from "../context/SocketContext";
@@ -24,14 +26,15 @@ export default function NotificationsPage() {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("all"); // all, unread, read
-  const [typeFilter, setTypeFilter] = useState("all"); // all, invite, task, system
+  const [filter, setFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [markAllConfirm, setMarkAllConfirm] = useState(false);
   const { socket } = useSocket();
 
   useEffect(() => {
     loadNotifications();
     
-    // Listen for real-time notifications
     if (socket) {
       socket.on("notification", (newNotification) => {
         setNotifications(prev => [newNotification, ...prev]);
@@ -57,19 +60,16 @@ export default function NotificationsPage() {
   useEffect(() => {
     let filtered = notifications;
 
-    // Apply read/unread filter
     if (filter === "unread") {
       filtered = filtered.filter(n => !n.read);
     } else if (filter === "read") {
       filtered = filtered.filter(n => n.read);
     }
 
-    // Apply type filter
     if (typeFilter !== "all") {
       filtered = filtered.filter(n => n.type === typeFilter);
     }
 
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(n => 
         n.message?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -97,6 +97,7 @@ export default function NotificationsPage() {
       await markAllNotificationsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       toast.success("All notifications marked as read");
+      setMarkAllConfirm(false);
     } catch (error) {
       console.error("Failed to mark all as read:", error);
       toast.error("Failed to mark all notifications as read");
@@ -108,6 +109,7 @@ export default function NotificationsPage() {
       await deleteNotification(id);
       setNotifications(prev => prev.filter(n => n._id !== id));
       toast.success("Notification deleted");
+      setDeleteConfirm(null);
     } catch (error) {
       console.error("Failed to delete notification:", error);
       toast.error("Failed to delete notification");
@@ -158,9 +160,57 @@ export default function NotificationsPage() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  // Confirmation Dialog Component
+  const ConfirmationDialog = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Delete", type = "delete" }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4 animate-fade-in">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md transform animate-scale-in">
+          <div className="p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                type === 'delete' ? 'bg-red-100 dark:bg-red-900/20' : 'bg-blue-100 dark:bg-blue-900/20'
+              }`}>
+                <AlertTriangle className={`w-6 h-6 ${type === 'delete' ? 'text-red-600' : 'text-blue-600'}`} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {message}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`px-4 py-2 text-white rounded-lg transition-colors duration-200 ${
+                  type === 'delete' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
+      <div className="h-fill bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
@@ -170,7 +220,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="h-fill bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
@@ -186,7 +236,7 @@ export default function NotificationsPage() {
           <div className="flex items-center space-x-4 mt-4 lg:mt-0">
             {unreadCount > 0 && (
               <button
-                onClick={handleMarkAllRead}
+                onClick={() => setMarkAllConfirm(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
               >
                 <CheckCheck className="w-4 h-4" />
@@ -411,7 +461,7 @@ export default function NotificationsPage() {
                             </button>
                           )}
                           <button
-                            onClick={() => handleDeleteNotification(notification._id)}
+                            onClick={() => setDeleteConfirm(notification._id)}
                             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
                             title="Delete notification"
                           >
@@ -436,7 +486,47 @@ export default function NotificationsPage() {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={() => handleDeleteNotification(deleteConfirm)}
+          title="Delete Notification"
+          message="Are you sure you want to delete this notification? This action cannot be undone."
+          confirmText="Delete"
+          type="delete"
+        />
+
+        {/* Mark All Read Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={markAllConfirm}
+          onClose={() => setMarkAllConfirm(false)}
+          onConfirm={handleMarkAllRead}
+          title="Mark All as Read"
+          message="Are you sure you want to mark all notifications as read? This will clear all unread indicators."
+          confirmText="Mark All Read"
+          type="info"
+        />
       </div>
+
+      {/* Custom Styles */}
+      <style >{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

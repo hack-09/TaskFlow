@@ -69,7 +69,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen py-5 flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 relative overflow-hidden">
+        <div className="h-fill py-5 flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 relative overflow-hidden">
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-32 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -266,7 +266,7 @@ const LoginPage = () => {
             </div>
 
             {/* Add CSS animations */}
-            <style jsx>{`
+            <style >{`
                 @keyframes float {
                     0%, 100% { transform: translateY(0px) rotate(0deg); }
                     50% { transform: translateY(-20px) rotate(180deg); }

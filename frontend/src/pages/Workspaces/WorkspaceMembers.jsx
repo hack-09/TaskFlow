@@ -82,7 +82,7 @@ const WorkspaceMembers = () => {
     );
 
   return (
-    <div className="p-6 bg-gray-100 dark:bg-gray-800 min-h-screen">
+    <div className="p-6 bg-gray-100 dark:bg-gray-800 h-fill">
       <h1 className="text-3xl font-bold text-blue-600 mb-6">
         Members of Workspace: {workspace?.name || "Loading..."}
       </h1>
