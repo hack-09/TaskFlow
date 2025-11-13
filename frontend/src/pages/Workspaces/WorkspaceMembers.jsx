@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { inviteMember, removeMember } from "../../service/api";
+import { getWorkspaceDetails } from "../../service/workspaceService";
 
 const WorkspaceMembers = () => {
-  const { workspaceId } = useWorkspace();
+  const { id } = useParams();
+  const workspaceId = id;
   const [workspace, setWorkspace] = useState(null);
   const [loading, setLoading] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -15,13 +18,7 @@ const WorkspaceMembers = () => {
     if (!workspaceId) return;
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_ARI_CALL_URL}/workspaces/${workspaceId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const data = await getWorkspaceDetails(id);
       setWorkspace(data);
       setLoading(false);
     } catch (err) {

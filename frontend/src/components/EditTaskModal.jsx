@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSocket } from "../context/SocketContext";
+import { updateTask } from "../service/api";
 import axios from "axios";
 import { 
   X, 
@@ -53,10 +54,7 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
         try {
             setLoading(true);
             setError("");
-            const token = localStorage.getItem("token");
-            await axios.put(`${process.env.REACT_APP_ARI_CALL_URL}/tasks/${task._id}`, updatedTask, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await updateTask(task._id, updatedTask);
             
             onUpdate({ ...task, ...updatedTask });
             if (socket && isConnected) {

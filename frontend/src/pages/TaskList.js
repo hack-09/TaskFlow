@@ -20,7 +20,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import EditTaskModal from '../components/EditTaskModal';
-import { deleteTask } from "../service/api";
+import { fetchTasks, deleteTask } from "../service/api";
 import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 
@@ -78,7 +78,7 @@ const TaskList = () => {
         };
     }, [socket, workspaceId]);
 
-    const fetchTasks = async (pageNum = 1, filters = {}) => {
+    const fetchTaskDetails = async (pageNum = 1, filters = {}) => {
         try {
             if (pageNum === 1) {
                 setLoading(true);
@@ -100,13 +100,7 @@ const TaskList = () => {
                 params.append('search', searchTerm);
             }
 
-            const endpoint = workspaceId 
-                ? `/tasks?workspaceId=${workspaceId}&${params}`
-                : `/tasks?${params}`;
-
-            const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}${endpoint}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await fetchTasks(workspaceId, params);
 
             if (res.data.success) {
                 setTasks(res.data.tasks);
@@ -123,7 +117,7 @@ const TaskList = () => {
     };
 
     useEffect(() => {
-        fetchTasks(1, filters);
+        fetchTaskDetails(1, filters);
     }, [workspaceId]);
 
     useEffect(() => {
@@ -164,7 +158,7 @@ const TaskList = () => {
     // Handle search and filter changes
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchTasks(1, filters);
+            fetchTaskDetails(1, filters);
         }, 500); // Debounce search
 
         return () => clearTimeout(timeoutId);
@@ -174,7 +168,7 @@ const TaskList = () => {
         try {
             await deleteTask(taskId);
             // Refresh the current page after deletion
-            fetchTasks(page, filters);
+            fetchTaskDetails(page, filters);
             setConfirmDelete(null);
         } catch (err) {
             console.error("Failed to delete task:", err);
@@ -210,7 +204,7 @@ const TaskList = () => {
             category: "",
         });
         setSearchTerm("");
-        fetchTasks(1, {});
+        fetchTaskDetails(1, {});
     };
 
     const getPriorityIcon = (priority) => {
@@ -271,7 +265,7 @@ const TaskList = () => {
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
-            fetchTasks(newPage, filters);
+            fetchTaskDetails(newPage, filters);
             // Scroll to top when changing pages
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

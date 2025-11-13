@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useWorkspace } from "../context/WorkspaceContext"; // only if you want dynamic hook inside
 
-const API = axios.create({ baseURL: `${process.env.REACT_APP_ARI_CALL_URL}` });
+const API = axios.create({ baseURL: `${process.env.REACT_APP_API_URL}` });
 
 // Add Authorization header
 API.interceptors.request.use((req) => {
@@ -14,7 +14,7 @@ API.interceptors.request.use((req) => {
 
 // Pass workspaceId explicitly when calling these
 
-export const fetchTasks = (workspaceId, query) =>
+export const fetchTasks = (workspaceId, query={}) =>
   API.get("/tasks", { params: { ...query, workspaceId } });
 
 export const createTask = (workspaceId, taskData) =>

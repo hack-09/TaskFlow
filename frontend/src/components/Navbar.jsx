@@ -46,9 +46,9 @@ function Navbar() {
         ]);
         setUser(userRes.data);
         setWorkspaces(workspacesRes.data);
-        console.log("User workspaces:", userRes.data);
-        console.log("User Data:", user);
-        console.log("Workspace Data:", workspaces);
+        // console.log("User workspaces:", userRes.data);
+        // console.log("User Data:", user);
+        // console.log("Workspace Data:", workspaces);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -67,14 +67,14 @@ function Navbar() {
     }
   }, [isDarkMode]);
 
-  useEffect(() => {
-    console.log("User updated:", user);
-    console.log("User name:", user?user["name"]:"");
-  }, [user]);
+  // useEffect(() => {
+  //   console.log("User updated:", user);
+  //   console.log("User name:", user?user["name"]:"");
+  // }, [user]);
 
-  useEffect(() => {
-    console.log("Workspaces updated:", workspaces);
-  }, [workspaces]);
+  // useEffect(() => {
+  //   console.log("Workspaces updated:", workspaces);
+  // }, [workspaces]);
 
   const handleThemeToggle = () => {
     setIsDarkMode((prevMode) => {
@@ -177,8 +177,8 @@ function Navbar() {
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white truncate">Name: {user.name}</h3>
-                  <p className="text-blue-200/80 text-sm truncate">Email: {user.email}</p>
+                  <h3 className="font-semibold text-white truncate"> {user.name}</h3>
+                  <p className="text-blue-200/80 text-sm truncate"> {user.email}</p>
                 </div>
               </div>
             </div>

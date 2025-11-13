@@ -11,6 +11,8 @@ import Documentation from "./pages/legal/Documentation";
 import Contact from "./pages/legal/Contact";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
+import ProfilePage from "./pages/legal/ProfilePage";
+import SettingsPage from "./pages/legal/SettingsPage";
 
 import AddTaskModal from "./pages/AddTaskModal";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -57,6 +59,9 @@ function App() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/tasks" element={<TaskList />} />
                             <Route path="/addtasks" element={<AddTaskModal />} />
+
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
 
                             {/* Collaboration workspace routes */}
                             <Route path="/workspaces" element={<WorkspaceList />} />

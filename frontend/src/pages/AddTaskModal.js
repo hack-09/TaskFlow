@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createTask } from "../service/api";
+import { getAISuggestedPriority } from "../service/aiService";
 import { 
   ArrowLeft, 
   PlusCircle, 
@@ -67,20 +68,13 @@ const AddTaskPage = () => {
       setAiLoading(prev => ({ ...prev, priority: true }));
       toast.loading("Analyzing task priority...");
 
-      const res = await fetch("http://localhost:5000/ai/smart-priority", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-        }),
-      });
+      const res = await getAISuggestedPriority(
+        formData.title,
+        formData.description,
+        formData.dueDate
+      );
 
-      const data = await res.json();
+      const data = res.data;
       toast.dismiss();
 
       if (data.suggestedPriority) {

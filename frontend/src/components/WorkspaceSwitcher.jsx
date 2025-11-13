@@ -10,7 +10,7 @@ const WorkspaceSwitcher = () => {
     const fetchWorkspaces = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/workspaces`, {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/workspaces`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setWorkspaces(res.data);

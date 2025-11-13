@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { fetchWorkspaces } from "../../service/workspaceService";
 
 const WorkspaceList = () => {
   const [workspaces, setWorkspaces] = useState([]);
@@ -9,19 +10,16 @@ const WorkspaceList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchWorkspaces = async () => {
+    const fetchWorkspacesDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/workspaces/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        // console.log("Fetched workspaces:", res.data);
-        setWorkspaces(res.data);
+        const res = await fetchWorkspaces();
+        setWorkspaces(res);
       } catch (err) {
         console.error("Failed to fetch workspaces:", err);
       }
     };
-    fetchWorkspaces();
+    fetchWorkspacesDetails();
   }, []);
 
   return (

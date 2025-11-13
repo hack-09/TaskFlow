@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useSocket } from "../context/SocketContext";
 import TaskAnalytics from "../components/TaskAnalytics";
+import { fetchTasks } from "../service/api";
 import { 
   PlusCircle, 
   TrendingUp, 
@@ -32,16 +33,11 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchTasks = async () => {
+  const fetchTaskDetails = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) return console.warn("No auth token found.");
-      
-      const res = await axios.get(`${process.env.REACT_APP_ARI_CALL_URL}/tasks`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
+      const res = await fetchTasks("", "");
+
       const fetchedTasks = res.data.tasks || [];
       setTasks(fetchedTasks);
       setRecentTasks(fetchedTasks.slice(0, 5)); // Show only 5 recent tasks
@@ -69,7 +65,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchTasks();
+    fetchTaskDetails();
   }, []);
 
   const getTaskBadge = (task) => {

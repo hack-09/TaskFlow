@@ -4,6 +4,7 @@ import jwtDecode from "jwt-decode";
 import axios from "axios";
 import { Users, ListCheck, Activity, UserPlus, ArrowLeft } from "lucide-react";
 import { useSocket } from "../context/SocketContext";
+import { getWorkspaceDetails } from "../service/workspaceService";
 import ActivityLog from "../components/ActivityLog";
 
 function WorkspaceDashboard() {
@@ -16,7 +17,6 @@ function WorkspaceDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
-  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
   const token = localStorage.getItem("token");
   const decoded = token ? jwtDecode(token) : null;
   const userId = decoded?.id || decoded?._id; 
@@ -25,10 +25,8 @@ function WorkspaceDashboard() {
   const fetchWorkspace = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/workspaces/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data.workspace || res.data;
+      const res = await getWorkspaceDetails(id);
+      const data = res.workspace || res;
       setWorkspace(data);
       setIsAdmin(data?.ownerId._id == userId || false);
     } catch (err) {
