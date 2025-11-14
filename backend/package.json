@@ -25,6 +25,7 @@
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "openai": "^6.8.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "zod": "^4.1.12"
   }
 }

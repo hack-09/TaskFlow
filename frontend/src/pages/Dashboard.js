@@ -18,10 +18,8 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
-  // eslint-disable-next-line
   const { socket } = useSocket();
   const navigate = useNavigate();
-  // eslint-disable-next-line
   const [tasks, setTasks] = useState([]);
   const [recentTasks, setRecentTasks] = useState([]);
   const [summary, setSummary] = useState({
@@ -32,20 +30,77 @@ const Dashboard = () => {
     overdue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchTaskDetails = async () => {
+  // Cache keys for localStorage
+  const CACHE_KEYS = {
+    TASKS: 'dashboard_tasks',
+    SUMMARY: 'dashboard_summary',
+    RECENT_TASKS: 'dashboard_recent_tasks',
+    TIMESTAMP: 'dashboard_cache_timestamp'
+  };
+
+  // Load cached data on component mount
+  const loadCachedData = () => {
     try {
-      setLoading(true);
-      const res = await fetchTasks("", "");
+      const cachedTasks = localStorage.getItem(CACHE_KEYS.TASKS);
+      const cachedSummary = localStorage.getItem(CACHE_KEYS.SUMMARY);
+      const cachedRecentTasks = localStorage.getItem(CACHE_KEYS.RECENT_TASKS);
+      const cacheTimestamp = localStorage.getItem(CACHE_KEYS.TIMESTAMP);
 
+      // Check if cache is less than 5 minutes old
+      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+
+      if (cachedTasks && cachedSummary && cachedRecentTasks && isCacheValid) {
+        setTasks(JSON.parse(cachedTasks));
+        setSummary(JSON.parse(cachedSummary));
+        setRecentTasks(JSON.parse(cachedRecentTasks));
+        return true;
+      }
+    } catch (error) {
+      console.error("Error loading cached data:", error);
+    }
+    return false;
+  };
+
+  // Save data to cache
+  const saveToCache = (tasks, summary, recentTasks) => {
+    try {
+      localStorage.setItem(CACHE_KEYS.TASKS, JSON.stringify(tasks));
+      localStorage.setItem(CACHE_KEYS.SUMMARY, JSON.stringify(summary));
+      localStorage.setItem(CACHE_KEYS.RECENT_TASKS, JSON.stringify(recentTasks));
+      localStorage.setItem(CACHE_KEYS.TIMESTAMP, Date.now().toString());
+    } catch (error) {
+      console.error("Error saving to cache:", error);
+    }
+  };
+
+  const fetchTaskDetails = async (isBackgroundRefresh = false) => {
+    if (!isBackgroundRefresh) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const res = await fetchTasks("", "");
       const fetchedTasks = res.data.tasks || [];
+      
       setTasks(fetchedTasks);
-      setRecentTasks(fetchedTasks.slice(0, 5)); // Show only 5 recent tasks
-      calculateSummary(fetchedTasks);
+      const recent = fetchedTasks.slice(0, 5);
+      setRecentTasks(recent);
+      
+      const newSummary = calculateSummary(fetchedTasks);
+      setSummary(newSummary);
+      
+      // Save to cache
+      saveToCache(fetchedTasks, newSummary, recent);
+      
     } catch (err) {
       console.error("Failed to fetch personal tasks:", err);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -61,11 +116,21 @@ const Dashboard = () => {
         new Date(t.dueDate) < new Date()
     ).length;
     
-    setSummary({ total, pending, inProgress, completed, overdue });
+    return { total, pending, inProgress, completed, overdue };
   };
 
   useEffect(() => {
-    fetchTaskDetails();
+    // Try to load cached data first
+    const hasCachedData = loadCachedData();
+    
+    // Always fetch fresh data, but don't show loading if we have cached data
+    if (hasCachedData) {
+      setLoading(false);
+      // Refresh data in background
+      fetchTaskDetails(true);
+    } else {
+      fetchTaskDetails(false);
+    }
     // eslint-disable-next-line
   }, []);
 
@@ -119,12 +184,92 @@ const Dashboard = () => {
     }
   };
 
+  // Skeleton Loading Components
+  const SkeletonCard = ({ className = "" }) => (
+    <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 animate-pulse ${className}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+        </div>
+        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+      </div>
+    </div>
+  );
+
+  const SkeletonTaskCard = () => (
+    <div className="group p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          </div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-3"></div>
+          <div className="flex items-center space-x-4">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-28"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const SkeletonHeader = () => (
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+      <div>
+        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-80 animate-pulse"></div>
+      </div>
+      <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl w-48 mt-4 lg:mt-0 animate-pulse"></div>
+    </div>
+  );
+
+  const SkeletonStats = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+      <div className="bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 h-24"></div>
+      <div className="bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 h-24"></div>
+      <div className="bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-600 rounded-2xl p-6 h-24"></div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="h-fill bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading your dashboard...</p>
+      <div className="h-fill bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Skeleton Header */}
+          <SkeletonHeader />
+
+          {/* Skeleton Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {[...Array(5)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+
+          {/* Skeleton Analytics */}
+          <div className="mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 h-96 animate-pulse">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </div>
+
+          {/* Skeleton Recent Tasks */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+            </div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <SkeletonTaskCard key={i} />
+              ))}
+            </div>
+          </div>
+
+          {/* Skeleton Quick Stats */}
+          <SkeletonStats />
         </div>
       </div>
     );
@@ -141,16 +286,32 @@ const Dashboard = () => {
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               Welcome back! Here's your productivity overview
+              {isRefreshing && (
+                <span className="ml-2 text-sm text-blue-500 animate-pulse">
+                  • Updating...
+                </span>
+              )}
             </p>
           </div>
           
-          <button
-            onClick={() => navigate("/addtasks")}
-            className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg mt-4 lg:mt-0"
-          >
-            <PlusCircle className="w-5 h-5" />
-            <span>Add New Task</span>
-          </button>
+          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            <button
+              onClick={() => fetchTaskDetails(true)}
+              disabled={isRefreshing}
+              className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 disabled:opacity-50"
+            >
+              <Clock className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+            
+            <button
+              onClick={() => navigate("/addtasks")}
+              className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <PlusCircle className="w-5 h-5" />
+              <span>Add New Task</span>
+            </button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -351,7 +512,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <style >{`
+      <style>{`
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;
